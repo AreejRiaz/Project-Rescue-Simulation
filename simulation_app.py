@@ -349,9 +349,13 @@ with st.sidebar:
         st.progress(prog)
         st.caption(f"{round(s.tasks_completed)} / {s.tasks_required} ({round(prog*100)}%)")
         st.divider()
+        budget_left = max(0, s.budget - round(s.cost_spent))
+        budget_pct  = round((s.cost_spent / s.budget) * 100) if s.budget else 0
         c1,c2 = st.columns(2)
-        c1.metric("Budget", f"£{s.budget:,}", f"-£{round(s.cost_spent):,}")
-        c2.metric("Week", f"{s.week}", f"/ {s.max_weeks}")
+        c1.metric("Remaining", f"£{budget_left:,}", f"-£{round(s.cost_spent):,} spent")
+        c2.metric("Week", f"{s.week} / {s.max_weeks}")
+        st.caption(f"Budget used: {budget_pct}% of £{s.budget:,}")
+        st.progress(min(1.0, s.cost_spent / s.budget))
         st.divider()
         st.markdown(f"**Morale:** {round(s.morale)}/100")
         st.progress(s.morale/100)
@@ -778,12 +782,14 @@ elif s.phase == "complete":
             for k in list(st.session_state.keys()): del st.session_state[k]
             st.rerun()
 
-# ── Footer ────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div style='text-align:center;padding:2rem 0 1rem;'>
-  <p style='color:#006938;font-size:0.85rem;font-family:DM Sans,Calibri,sans-serif;'>
-    <strong style='color:#005734;'>The Areej Tea Company Brief</strong>
-    &middot; MSc Project Management Simulation
-    &middot; Designed by <strong>Areej Riaz</strong> &middot; University of Stirling
-  </p>
-</div>""", unsafe_allow_html=True)
+
+# ── Footer ───────────────────────────────────────────────────────────────────────────────
+st.markdown(
+    "<div style='text-align:center;padding:2rem 0 1rem;'>"
+    "<p style='color:#006938;font-size:0.85rem;font-family:DM Sans,Calibri,sans-serif;'>"
+    "<strong style='color:#005734;'>The Areej Tea Company Brief</strong>"
+    " &middot; MSc Project Management Simulation"
+    " &middot; Designed by <strong>Areej Riaz</strong> &middot; University of Stirling"
+    "</p></div>",
+    unsafe_allow_html=True
+)
