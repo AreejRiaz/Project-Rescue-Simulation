@@ -334,6 +334,8 @@ with st.sidebar:
         for k in list(st.session_state.keys()):
             del st.session_state[k]
         st.rerun()
+    st.divider()
+    st.caption("Designed by **Areej Riaz** · University of Stirling")
 
 # ─── PHASE: Welcome ───────────────────────────────────────────────────────────
 if s.phase == "welcome":
@@ -744,3 +746,22 @@ elif s.phase == "complete":
             for k in list(st.session_state.keys()):
                 del st.session_state[k]
             st.rerun()
+
+# ─── Footer ───────────────────────────────────────────────────────────────────
+st.markdown("""
+<div style="
+    margin-top: 3rem;
+    padding: 1.2rem 2rem;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+">
+    <p style="margin: 0; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.04em;">
+        Designed by <strong>Areej Riaz</strong> &nbsp;·&nbsp; University of Stirling
+    </p>
+    <p style="margin: 0.3rem 0 0; font-size: 0.78rem; opacity: 0.75;">
+        MSc Project Management Simulation &nbsp;·&nbsp; Project Rescue
+    </p>
+</div>
+""", unsafe_allow_html=True)
