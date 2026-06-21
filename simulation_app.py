@@ -1,13 +1,13 @@
 """
-The Stirling Brief: International Strategy Consultancy Simulation
+The Areej Tea Company Brief: International Strategy Consultancy Simulation
 MSc Project Management · University of Stirling
-Based on the Stirling Tea Company case (IBUP101 Independent Project 2026).
+An MSc Project Management teaching simulation.
 
 Pedagogical purpose: Unlike passive case study reading, this simulation places
 students inside the PM role of a real consultancy engagement. Every decision
 compounds — just as it does in practice. Students experience Brooks's Law,
 the overtime paradox, scope creep, rework spirals, and critical path
-dependencies firsthand, then debrief against Heather Blair's actual priorities.
+dependencies firsthand, then debrief against Areej Riaz's actual priorities.
 """
 
 import streamlit as st
@@ -16,7 +16,7 @@ import plotly.graph_objects as go
 import random
 
 st.set_page_config(
-    page_title="The Stirling Brief",
+    page_title="The Areej Tea Company Brief",
     page_icon="\U0001f375",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -24,32 +24,44 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.main-header{background:linear-gradient(135deg,#1e3a5f 0%,#2d6a9f 100%);color:white;
-  padding:1.5rem 2rem;border-radius:12px;margin-bottom:1.5rem;text-align:center;}
-.main-header h1{font-size:2rem;margin:0;font-weight:700;}
-.main-header p{font-size:1rem;margin:.3rem 0 0;opacity:.85;}
-.phase-bar{background:#e8f4fd;border-left:5px solid #2d6a9f;border-radius:8px;
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* University of Stirling brand colours:
+   Heritage Green #006938 | Energy Green #76b72a | Teal #008996
+   Yellow #edab00 | Orange #d9541a | Dark Green #005734 */
+
+html, body, [class*="css"] {
+  font-family: 'DM Sans', Calibri, sans-serif;
+}
+h1,h2,h3,h4 { font-family: 'Nunito', Calibri, sans-serif; }
+
+.main-header{background:linear-gradient(135deg,#005734 0%,#006938 60%,#008996 100%);
+  color:white;padding:1.5rem 2rem;border-radius:12px;margin-bottom:1.5rem;text-align:center;}
+.main-header h1{font-size:2rem;margin:0;font-weight:800;font-family:'Nunito',Calibri,sans-serif;}
+.main-header p{font-size:1rem;margin:.3rem 0 0;opacity:.9;}
+.phase-bar{background:#e8f5ee;border-left:5px solid #006938;border-radius:8px;
   padding:.8rem 1.2rem;margin:.5rem 0 1rem;}
-.phase-bar b{color:#1e3a5f;}
-.event-box{background:#fff3cd;border-left:5px solid #f5a623;border-radius:8px;
+.phase-bar b{color:#005734;}
+.event-box{background:#fff8e1;border-left:5px solid #edab00;border-radius:8px;
   padding:1rem 1.2rem;margin:1rem 0;}
-.event-box h4{margin:0 0 .4rem;color:#7a5500;}
-.gate-box{background:#e8f5e9;border-left:5px solid #28a745;border-radius:8px;
+.event-box h4{margin:0 0 .4rem;color:#7b5c18;}
+.gate-box{background:#e8f5ee;border-left:5px solid #76b72a;border-radius:8px;
   padding:1.2rem 1.5rem;margin:1rem 0;}
-.score-box{background:linear-gradient(135deg,#0f4c75 0%,#1b6ca8 100%);color:white;
-  border-radius:12px;padding:2rem;text-align:center;margin:1rem 0;}
-.score-box .total{font-size:4rem;font-weight:800;}
-.brief-box{background:#f0f7ff;border:1px solid #b3d4f0;border-radius:10px;
+.score-box{background:linear-gradient(135deg,#005734 0%,#006938 60%,#008996 100%);
+  color:white;border-radius:12px;padding:2rem;text-align:center;margin:1rem 0;}
+.score-box .total{font-size:4rem;font-weight:800;font-family:'Nunito',Calibri,sans-serif;}
+.brief-box{background:#f2f9f5;border:1px solid #9fcc69;border-radius:10px;
   padding:1.5rem;margin:1rem 0;}
-.rec-box{background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;
+.rec-box{background:#f5f7f2;border:1px solid #c5e28b;border-radius:10px;
   padding:1.2rem 1.5rem;margin:.8rem 0;}
-.rec-correct{background:#d4edda;border-left:4px solid #28a745;border-radius:8px;
+.rec-correct{background:#e8f5ee;border-left:4px solid #006938;border-radius:8px;
   padding:.8rem 1rem;margin:.4rem 0;}
-.rec-partial{background:#fff3cd;border-left:4px solid #f5a623;border-radius:8px;
+.rec-partial{background:#fff8e1;border-left:4px solid #edab00;border-radius:8px;
   padding:.8rem 1rem;margin:.4rem 0;}
-.reflection-box{background:#f0fff4;border-left:4px solid #28a745;border-radius:8px;
+.reflection-box{background:#f2f9f5;border-left:4px solid #76b72a;border-radius:8px;
   padding:1rem 1.2rem;margin:.5rem 0;}
-.stButton>button{border-radius:8px;font-weight:600;padding:.5rem 1.5rem;}
+.stButton>button{border-radius:8px;font-weight:600;padding:.5rem 1.5rem;
+  font-family:'DM Sans',Calibri,sans-serif;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,7 +89,7 @@ PHASES = {
 
 SCENARIOS = {
     "Scenario 1 – Balanced Engagement": {
-        "desc": "Standard 8-week engagement. Heather is cooperative, data arrives on time, brief is clear. The usual PM tensions — scope, quality, budget, people — all apply.",
+        "desc": "Standard 8-week engagement. Areej is cooperative, data arrives on time, brief is clear. The usual PM tensions — scope, quality, budget, people — all apply.",
         "focus": "Core PM trade-offs · Iron Triangle",
         "events": {},
     },
@@ -87,17 +99,17 @@ SCENARIOS = {
         "events": {4: "staffing_shock"},
     },
     "Scenario 3 – Deadline Compression": {
-        "desc": "Heather lands an unexpected distributor meeting at a trade fair — she needs your recommendations one week early. Parkinson's Law works in reverse.",
+        "desc": "Areej lands an unexpected distributor meeting at a trade fair — she needs your recommendations one week early. Parkinson's Law works in reverse.",
         "focus": "Schedule pressure · Critical path",
         "events": {4: "deadline_compress"},
     },
     "Scenario 4 – Scope Creep": {
-        "desc": "Heather asks you to also assess Latin America and evaluate sustainability certification — not in the original brief. Hold the line or absorb the change?",
+        "desc": "Areej asks you to also assess Latin America and evaluate sustainability certification — not in the original brief. Hold the line or absorb the change?",
         "focus": "Scope change · Stakeholder management",
         "events": {5: "scope_creep"},
     },
     "Scenario 5 – High Uncertainty": {
-        "desc": "Survey data has gaps, supplier dataset arrives with pricing errors, and Heather pivots her priority export region mid-project. Pilot analysis is your insurance.",
+        "desc": "Survey data has gaps, supplier dataset arrives with pricing errors, and Areej pivots her priority export region mid-project. Pilot analysis is your insurance.",
         "focus": "Ambiguity · Rework spiral · Pilot analysis",
         "events": {3: "unclear_needs", 5: "data_gap", 7: "req_change"},
     },
@@ -105,7 +117,7 @@ SCENARIOS = {
 
 RECS = {
     "import_route": {
-        "q": "Which import strategy do you recommend to Heather?",
+        "q": "Which import strategy do you recommend to Areej?",
         "opts": [
             "UK Wholesaler only — find a new domestic supplier",
             "International Wholesaler — better pricing, still arm\'s length",
@@ -113,10 +125,10 @@ RECS = {
             "Combination — direct for primary origins, wholesaler as backup",
         ],
         "best": 3,
-        "why": "Heather values sustainability, exact pricing, and not exploiting farmers at source. A combination of direct sourcing (primary origins) with a wholesale safety net gives cost control, supply resilience, and ethical alignment.",
+        "why": "Areej values sustainability, exact pricing, and not exploiting farmers at source. A combination of direct sourcing (primary origins) with a wholesale safety net gives cost control, supply resilience, and ethical alignment.",
     },
     "export_region": {
-        "q": "Which region should Stirling Tea prioritise for export first?",
+        "q": "Which region should Areej Tea prioritise for export first?",
         "opts": [
             "Western Europe — proximity, easy logistics",
             "Asia-Pacific — growing premium market, appetite for imported goods",
@@ -124,10 +136,10 @@ RECS = {
             "Latin America — emerging market, lower competition",
         ],
         "best": 1,
-        "why": "Heather explicitly said Europe is already saturated with premium brands. Asia-Pacific offers a growing appetite for premium imported goods and an untapped opportunity for authentic Scottish brand positioning.",
+        "why": "Areej explicitly said Europe is already saturated with premium brands. Asia-Pacific offers a growing appetite for premium imported goods and an untapped opportunity for authentic Scottish brand positioning.",
     },
     "entry_mode": {
-        "q": "How should Stirling Tea enter international markets?",
+        "q": "How should Areej Tea enter international markets?",
         "opts": [
             "Direct-to-Consumer online — full margin, but high shipping and duties",
             "International Wholesalers — lower margin, simpler, scalable",
@@ -135,7 +147,7 @@ RECS = {
             "Start with wholesalers, layer in DTC as brand establishes",
         ],
         "best": 3,
-        "why": "Heather expressed concern about DTC margin erosion via shipping and duties. Starting with established wholesalers builds market presence with lower risk; adding DTC channels once brand is known is the proven internationalisation path for premium FMCG.",
+        "why": "Areej expressed concern about DTC margin erosion via shipping and duties. Starting with established wholesalers builds market presence with lower risk; adding DTC channels once brand is known is the proven internationalisation path for premium FMCG.",
     },
     "sustainability": {
         "q": "On sustainability in sourcing — what is your recommendation?",
@@ -146,7 +158,7 @@ RECS = {
             "Pursue Fairtrade/Rainforest Alliance certification as differentiator",
         ],
         "best": 2,
-        "why": "Heather\'s exact words: \'We are willing to pay a little bit more so not to exploit farmers at source.\' Sustainability is a stated founder value, not a financial calculation. Recommending otherwise misreads the client.",
+        "why": "Areej\'s exact words: \'We are willing to pay a little bit more so not to exploit farmers at source.\' Sustainability is a stated founder value, not a financial calculation. Recommending otherwise misreads the client.",
     },
 }
 
@@ -290,7 +302,7 @@ def apply_event(key, choice=None):
         s.schedule_target = max(s.week, s.schedule_target - 1)
         s.stress = min(100, s.stress + 12)
         s.schedule_weight = 180
-        s.event_log.append("Week 4: Heather secured a distributor meeting at a trade fair — deadline moved forward 1 week.")
+        s.event_log.append("Week 4: Areej secured a distributor meeting at a trade fair — deadline moved forward 1 week.")
 
     elif key == "scope_creep":
         if choice == "full":
@@ -320,12 +332,12 @@ def apply_event(key, choice=None):
         pen = 0.5 if s.prototype_count >= 2 else 1.0
         lost = round(10 * pen)
         s.tasks_completed = max(0, s.tasks_completed - lost)
-        s.event_log.append(f"Week 7: Heather pivots priority export region to the Middle East after a new distributor contact ({lost} deliverables lost).")
+        s.event_log.append(f"Week 7: Areej pivots priority export region to the Middle East after a new distributor contact ({lost} deliverables lost).")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/tea.png", width=56)
-    st.markdown("## The Stirling Brief")
+    st.markdown("## The Areej Tea Company Brief")
     st.caption("MSc Project Management Simulation")
     st.divider()
     if s.phase not in ("welcome","setup"):
@@ -360,7 +372,7 @@ with st.sidebar:
 # ── WELCOME ───────────────────────────────────────────────────────────────────
 if s.phase == "welcome":
     st.markdown("""<div class="main-header">
-    <h1>The Stirling Brief</h1>
+    <h1>The Areej Tea Company Brief</h1>
     <p>International Strategy Consultancy Simulation &nbsp;·&nbsp; MSc Project Management</p>
     </div>""", unsafe_allow_html=True)
 
@@ -373,8 +385,8 @@ if s.phase == "welcome":
         You will feel Brooks\'s Law, the overtime paradox, the rework spiral, and the critical path
         dependency firsthand. Then you will debrief against real data.</p>
         <h3>Your Mission</h3>
-        <p>You are a consultancy team hired by <strong>Heather Blair</strong>, founder of
-        <strong>Stirling Tea Company</strong> — a Scottish premium tea brand with
+        <p>You are a consultancy team hired by <strong>Areej Riaz</strong>, founder of
+        <strong>Areej Tea Company</strong> — a Scottish premium tea brand with
         £3.1M turnover, 800 stockists, and a collapsing supplier relationship.
         She needs strategic recommendations on two urgent problems:</p>
         <ul>
@@ -383,7 +395,7 @@ if s.phase == "welcome":
         <li><strong>Export ambition:</strong> Which markets? Which entry mode — DTC, wholesale,
         or distribution centre? What are the financial implications?</li>
         </ul>
-        <p>You have <strong>£32,000</strong> (Heather\'s professional services budget for this engagement)
+        <p>You have <strong>£32,000</strong> (Areej\'s professional services budget for this engagement)
         and up to 8 weeks to deliver a strategy report and present to her board.</p>
         <p>Your goal is not just to finish — it is to deliver <strong>rigorous analysis, on time,
         within budget, without burning out your team.</strong></p>
@@ -394,7 +406,7 @@ if s.phase == "welcome":
             "Project Lead":"Overall accountability. Makes the call each week.",
             "Finance Consultant":"Monitors the £32,000 budget and fee burn.",
             "Research Analyst":"Tracks deliverable quality and rework.",
-            "Client Manager":"Manages Heather\'s expectations and scope.",
+            "Client Manager":"Manages Areej\'s expectations and scope.",
         }.items():
             st.markdown(f"**{r}** — {d}")
 
@@ -530,11 +542,11 @@ elif s.phase == "playing":
 elif s.phase == "event":
     st.markdown("""<div class="main-header">
     <h1>Client Change Request</h1>
-    <p>Heather is on the phone...</p></div>""", unsafe_allow_html=True)
+    <p>Areej is on the phone...</p></div>""", unsafe_allow_html=True)
 
     st.markdown("""<div class="event-box">
     <h4>Week 5 — Scope Change Request</h4>
-    <p>Heather has been talking to a contact at a Latin American trade body. She now wants the
+    <p>Areej has been talking to a contact at a Latin American trade body. She now wants the
     engagement extended to include <strong>Latin American export markets</strong> and an assessment
     of <strong>sustainability certification options</strong> (Fairtrade, Rainforest Alliance).</p>
     <p><em>"I know it wasn\'t in the original brief, but I\'m paying for the best advice and I need
@@ -547,7 +559,7 @@ elif s.phase == "event":
         if st.button("Accept Full Scope", use_container_width=True):
             apply_event("scope_creep","full"); s.pending_event=None; s.phase="playing"; st.rerun()
     with c2:
-        st.markdown("**Accept Partially**\n- +12 deliverables\n- Latin America only\n- Manageable impact\n- Heather accepts compromise")
+        st.markdown("**Accept Partially**\n- +12 deliverables\n- Latin America only\n- Manageable impact\n- Areej accepts compromise")
         if st.button("Accept Partial", use_container_width=True):
             apply_event("scope_creep","partial"); s.pending_event=None; s.phase="playing"; st.rerun()
     with c3:
@@ -562,15 +574,15 @@ elif s.phase == "gate1":
     <p>End of Phase 1: Import Analysis complete</p></div>""", unsafe_allow_html=True)
 
     p1q = round(s.phase1_quality_sum / max(1, s.phase1_weeks))
-    colour = "#28a745" if p1q >= 75 else "#f5a623" if p1q >= 60 else "#dc3545"
+    colour = "#76b72a" if p1q >= 75 else "#edab00" if p1q >= 60 else "#dc3545"
     if p1q >= 75:
-        heather_msg = "<p>Heather is impressed: 'The import options analysis is thorough and I can see the financial implications clearly. Good foundation for the export work.'</p>"
+        heather_msg = "<p>Areej is impressed: 'The import options analysis is thorough and I can see the financial implications clearly. Good foundation for the export work.'</p>"
     elif p1q >= 60:
-        heather_msg = "<p>Heather is cautious: 'The import analysis is okay but I wanted more detail on the direct-source pricing. We need to be sharper in Phase 2.'</p>"
+        heather_msg = "<p>Areej is cautious: 'The import analysis is okay but I wanted more detail on the direct-source pricing. We need to be sharper in Phase 2.'</p>"
     else:
-        heather_msg = "<p>Heather is concerned: 'I am not confident in this import analysis. The financials are vague. Please make sure the export work is more rigorous — Phase 3 projections depend on getting the cost-per-box right.'</p>"
+        heather_msg = "<p>Areej is concerned: 'I am not confident in this import analysis. The financials are vague. Please make sure the export work is more rigorous — Phase 3 projections depend on getting the cost-per-box right.'</p>"
     st.markdown(f"""<div class="gate-box">
-    <h4>Heather's Week 3 Check-In</h4>
+    <h4>Areej's Week 3 Check-In</h4>
     <p>Your Phase 1 average analysis quality: <strong style="color:{colour};">{p1q}/100</strong></p>
     {heather_msg}
     <p><small><b>Note:</b> Phase 1 quality below 68/100 applies a 10-point quality penalty in Phase 3 — the export financial projections depend on the import cost assumptions established now.</small></p>
@@ -590,9 +602,9 @@ elif s.phase == "gate2":
     p1q = round(s.phase1_quality_sum / max(1, s.phase1_weeks))
     avg_q = (p1q + p2q) / 2
     if avg_q >= 72:
-        found_msg = "<p style='color:#28a745;'><b>Strong foundations.</b> Your analysis to date supports confident recommendations.</p>"
+        found_msg = "<p style='color:#76b72a;'><b>Strong foundations.</b> Your analysis to date supports confident recommendations.</p>"
     elif avg_q >= 58:
-        found_msg = "<p style='color:#f5a623;'><b>Mixed quality.</b> Be precise in Phase 3 — build on your best work from Phases 1 and 2.</p>"
+        found_msg = "<p style='color:#edab00;'><b>Mixed quality.</b> Be precise in Phase 3 — build on your best work from Phases 1 and 2.</p>"
     else:
         found_msg = "<p style='color:#dc3545;'><b>Weak foundations.</b> Phase 3 synthesis will carry forward quality gaps. The 10-point penalty is active.</p>"
     budget_left = round(BUDGET - s.cost_spent)
@@ -600,7 +612,7 @@ elif s.phase == "gate2":
     <h4>Before You Write the Strategy Report</h4>
     <p>Phase 1 avg quality: <strong>{p1q}/100</strong> &nbsp;|&nbsp; Phase 2 avg quality: <strong>{p2q}/100</strong></p>
     <p>You are about to enter Phase 3 — synthesising your import and export findings into
-    Heather's strategy report and financial projections. This is where critical path matters most.</p>
+    Areej's strategy report and financial projections. This is where critical path matters most.</p>
     {found_msg}
     <p>Budget remaining: <strong>£{budget_left:,}</strong> of £{BUDGET:,}</p>
     </div>""", unsafe_allow_html=True)
@@ -613,13 +625,13 @@ elif s.phase == "recommendation":
     sc = s.final_score
     st.markdown(f"""<div class="main-header">
     <h1>Present to the Client</h1>
-    <p>Week {s.week-1} — Heather\'s board meeting is tomorrow</p></div>""", unsafe_allow_html=True)
+    <p>Week {s.week-1} — Areej\'s board meeting is tomorrow</p></div>""", unsafe_allow_html=True)
 
     st.markdown("""<div class="brief-box">
     <h3>Your Strategic Recommendations</h3>
-    <p>Before you see your PM score, make your four strategic recommendations to Heather.
+    <p>Before you see your PM score, make your four strategic recommendations to Areej.
     These are the substantive answers her board is waiting for.
-    After you submit, you\'ll see how well they align with what Heather told you in the interview.</p>
+    After you submit, you\'ll see how well they align with what Areej told you in the interview.</p>
     </div>""", unsafe_allow_html=True)
 
     answers = {}
@@ -628,7 +640,7 @@ elif s.phase == "recommendation":
         st.markdown(f"**{q_text}**")
         answers[key] = st.radio("", rec["opts"], key=f"rec_{key}", label_visibility="collapsed")
 
-    if st.button("Submit Recommendations to Heather", use_container_width=True, type="primary"):
+    if st.button("Submit Recommendations to Areej", use_container_width=True, type="primary"):
         bonus = 0
         for key, rec in RECS.items():
             chosen_idx = rec["opts"].index(answers[key])
@@ -669,7 +681,7 @@ elif s.phase == "complete":
         })
         fig = go.Figure(go.Bar(
             x=df["Score"], y=df["Component"], orientation="h",
-            marker_color=["#2d6a9f","#1b998b","#f5a623","#28a745","#9b59b6"],
+            marker_color=["#006938","#008996","#edab00","#76b72a","#9b59b6"],
             text=[f"{s}/{m}" for s,m in zip(df["Score"],df["Max"])],
             textposition="outside",
         ))
@@ -680,7 +692,7 @@ elif s.phase == "complete":
 
     # Strategic recommendation reveal
     st.divider()
-    st.markdown("### Heather\'s Verdict on Your Recommendations")
+    st.markdown("### Areej\'s Verdict on Your Recommendations")
     for key, rec in RECS.items():
         chosen_idx = s.rec_answers.get(key, -1)
         is_best    = chosen_idx == rec["best"]
@@ -689,7 +701,7 @@ elif s.phase == "complete":
         icon       = "✅" if is_best else "🟡" if is_close else "❌"
         your_ans   = rec["opts"][chosen_idx] if chosen_idx >= 0 else "—"
         best_ans   = rec["opts"][rec["best"]]
-        pref_line = "" if is_best else f"<em>Heather's preference:</em> {best_ans}<br>"
+        pref_line = "" if is_best else f"<em>Areej's preference:</em> {best_ans}<br>"
         st.markdown(f"""<div class="{box_cls}">
         <b>{rec["q"]}</b><br>
         {icon} <em>Your answer:</em> {your_ans}<br>
@@ -705,23 +717,23 @@ elif s.phase == "complete":
         t1,t2,t3 = st.tabs(["Output & Rework","People Metrics","Fee Burn"])
         with t1:
             f1 = go.Figure()
-            f1.add_trace(go.Bar(x=hdf["week"],y=hdf["net"],name="Net Deliverables",marker_color="#2d6a9f"))
+            f1.add_trace(go.Bar(x=hdf["week"],y=hdf["net"],name="Net Deliverables",marker_color="#006938"))
             f1.add_trace(go.Bar(x=hdf["week"],y=hdf["rework"],name="Rework",marker_color="#dc3545"))
             f1.update_layout(barmode="stack",height=280,xaxis_title="Week",
                 paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(f1, use_container_width=True)
         with t2:
             f2 = go.Figure()
-            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["morale"],name="Morale",line=dict(color="#28a745",width=2)))
+            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["morale"],name="Morale",line=dict(color="#76b72a",width=2)))
             f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["stress"],name="Stress",line=dict(color="#dc3545",width=2)))
-            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["quality"],name="Quality",line=dict(color="#f5a623",width=2,dash="dot")))
+            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["quality"],name="Quality",line=dict(color="#edab00",width=2,dash="dot")))
             f2.update_layout(height=280,xaxis_title="Week",
                 paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(f2, use_container_width=True)
         with t3:
             cumcost = hdf["cost"].cumsum()
             f3 = go.Figure()
-            f3.add_trace(go.Scatter(x=hdf["week"],y=cumcost,fill="tozeroy",name="Cumulative Fees",line=dict(color="#2d6a9f")))
+            f3.add_trace(go.Scatter(x=hdf["week"],y=cumcost,fill="tozeroy",name="Cumulative Fees",line=dict(color="#006938")))
             f3.add_hline(y=BUDGET,line_dash="dash",line_color="red",annotation_text=f"Budget £{BUDGET:,}")
             f3.update_layout(height=280,xaxis_title="Week",
                 paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
@@ -747,11 +759,11 @@ elif s.phase == "complete":
         "Brooks\'s Law: did adding or losing people help or hurt? When did coordination costs outweigh capacity gains?",
         "The overtime paradox: did authorising overtime produce more net deliverables or just more rework?",
         "Critical path: did the quality of your Phase 1 (import analysis) affect your Phase 3 (synthesis)? How?",
-        "Scope management: when Heather asked for more, what criteria should determine the answer in real consultancy?",
+        "Scope management: when Areej asked for more, what criteria should determine the answer in real consultancy?",
         "Pilot analysis: did early validation reduce your rework? When is it worth the cost and when is it not?",
         "Budget: with only £32,000 available, what was your biggest trade-off between team size, grade, and time?",
-        "What would you recommend differently to Heather now compared to Week 1? What changed your view?",
-        "How would you present these findings differently if Heather were risk-averse vs. growth-hungry?",
+        "What would you recommend differently to Areej now compared to Week 1? What changed your view?",
+        "How would you present these findings differently if Areej were risk-averse vs. growth-hungry?",
     ]:
         st.markdown(f'<div class="reflection-box">💬 {p}</div>', unsafe_allow_html=True)
 
@@ -766,14 +778,12 @@ elif s.phase == "complete":
             for k in list(st.session_state.keys()): del st.session_state[k]
             st.rerun()
 
-
-st.markdown(
-    '<div style="margin-top:3rem;padding:1.2rem 2rem;'
-    'background:linear-gradient(135deg,#1e3a5f 0%,#2d6a9f 100%);'
-    'border-radius:12px;text-align:center;color:white;">'
-    '<p style="margin:0;font-size:.95rem;font-weight:600;">'
-    'Designed by <strong>Areej Riaz</strong> &middot; University of Stirling'
-    '</p><p style="margin:.3rem 0 0;font-size:.78rem;opacity:.75;">'
-    'MSc Project Management Simulation &middot; The Stirling Brief'
-    '</p></div>',
-    unsafe_allow_html=True)
+# ── Footer ────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div style='text-align:center;padding:2rem 0 1rem;'>
+  <p style='color:#006938;font-size:0.85rem;font-family:DM Sans,Calibri,sans-serif;'>
+    <strong style='color:#005734;'>The Areej Tea Company Brief</strong>
+    &middot; MSc Project Management Simulation
+    &middot; Designed by <strong>Areej Riaz</strong> &middot; University of Stirling
+  </p>
+</div>""", unsafe_allow_html=True)
