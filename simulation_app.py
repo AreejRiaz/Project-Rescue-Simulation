@@ -1,795 +1,942 @@
 """
-The Areej Tea Company Brief: International Strategy Consultancy Simulation
-MSc Project Management · University of Stirling
-An MSc Project Management teaching simulation.
+AquaHub Delivery Challenge — Project Management Simulation
+MSc Project Management Programme · University of Stirling
 
-Pedagogical purpose: Unlike passive case study reading, this simulation places
-students inside the PM role of a real consultancy engagement. Every decision
-compounds — just as it does in practice. Students experience Brooks's Law,
-the overtime paradox, scope creep, rework spirals, and critical path
-dependencies firsthand, then debrief against Areej Riaz's actual priorities.
+Run with:  streamlit run aquahub_simulation.py
 """
 
 import streamlit as st
-import pandas as pd
 import plotly.graph_objects as go
-import random
 
+# ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="The Areej Tea Company Brief",
-    page_icon="\U0001f375",
+    page_title="AquaHub Delivery Challenge",
+    page_icon="🌊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-st.markdown("""
+STIR_GREEN  = "#00573F"
+STIR_LT     = "#4A9B6F"
+STIR_PALE   = "#E8F5EE"
+
+# ── CSS ───────────────────────────────────────────────────────────────────────
+st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+  [data-testid="stAppViewContainer"] {{ background:#F4F8F5; }}
+  [data-testid="stSidebar"] {{ background:#00573F; }}
+  [data-testid="stSidebar"] * {{ color:white !important; }}
+  [data-testid="stSidebar"] .stMarkdown h3 {{ color:white !important; }}
 
-/* University of Stirling brand colours:
-   Heritage Green #006938 | Energy Green #76b72a | Teal #008996
-   Yellow #edab00 | Orange #d9541a | Dark Green #005734 */
+  .stButton > button {{
+      background:{STIR_GREEN} !important; color:white !important;
+      border:none !important; border-radius:8px !important;
+      padding:0.55rem 1.8rem !important; font-weight:600 !important;
+      font-size:1rem !important;
+  }}
+  .stButton > button:hover {{ background:{STIR_LT} !important; }}
 
-html, body, [class*="css"] {
-  font-family: 'DM Sans', Calibri, sans-serif;
-}
-h1,h2,h3,h4 { font-family: 'Nunito', Calibri, sans-serif; }
+  .hdr {{
+      background:linear-gradient(135deg,{STIR_GREEN},{STIR_LT});
+      color:white; padding:22px 28px; border-radius:12px;
+      margin-bottom:22px;
+  }}
+  .hdr h1,.hdr h2 {{ color:white; margin:0; }}
+  .hdr p {{ color:rgba(255,255,255,.82); margin:6px 0 0; }}
 
-.main-header{background:linear-gradient(135deg,#005734 0%,#006938 60%,#008996 100%);
-  color:white;padding:1.5rem 2rem;border-radius:12px;margin-bottom:1.5rem;text-align:center;}
-.main-header h1{font-size:2rem;margin:0;font-weight:800;font-family:'Nunito',Calibri,sans-serif;}
-.main-header p{font-size:1rem;margin:.3rem 0 0;opacity:.9;}
-.phase-bar{background:#e8f5ee;border-left:5px solid #006938;border-radius:8px;
-  padding:.8rem 1.2rem;margin:.5rem 0 1rem;}
-.phase-bar b{color:#005734;}
-.event-box{background:#fff8e1;border-left:5px solid #edab00;border-radius:8px;
-  padding:1rem 1.2rem;margin:1rem 0;}
-.event-box h4{margin:0 0 .4rem;color:#7b5c18;}
-.gate-box{background:#e8f5ee;border-left:5px solid #76b72a;border-radius:8px;
-  padding:1.2rem 1.5rem;margin:1rem 0;}
-.score-box{background:linear-gradient(135deg,#005734 0%,#006938 60%,#008996 100%);
-  color:white;border-radius:12px;padding:2rem;text-align:center;margin:1rem 0;}
-.score-box .total{font-size:4rem;font-weight:800;font-family:'Nunito',Calibri,sans-serif;}
-.brief-box{background:#f2f9f5;border:1px solid #9fcc69;border-radius:10px;
-  padding:1.5rem;margin:1rem 0;}
-.rec-box{background:#f5f7f2;border:1px solid #c5e28b;border-radius:10px;
-  padding:1.2rem 1.5rem;margin:.8rem 0;}
-.rec-correct{background:#e8f5ee;border-left:4px solid #006938;border-radius:8px;
-  padding:.8rem 1rem;margin:.4rem 0;}
-.rec-partial{background:#fff8e1;border-left:4px solid #edab00;border-radius:8px;
-  padding:.8rem 1rem;margin:.4rem 0;}
-.reflection-box{background:#f2f9f5;border-left:4px solid #76b72a;border-radius:8px;
-  padding:1rem 1.2rem;margin:.5rem 0;}
-.stButton>button{border-radius:8px;font-weight:600;padding:.5rem 1.5rem;
-  font-family:'DM Sans',Calibri,sans-serif;}
+  .card {{
+      background:white; border-radius:12px;
+      padding:20px 22px; margin-bottom:16px;
+      border-top:5px solid {STIR_GREEN};
+      box-shadow:0 2px 8px rgba(0,0,0,.09);
+  }}
+  .opt-hint {{
+      background:{STIR_PALE}; border-left:4px solid {STIR_LT};
+      border-radius:0 8px 8px 0; padding:10px 14px;
+      font-size:.9rem; color:#333; margin:6px 0 14px;
+  }}
+  .metric-pill {{
+      background:white; border-radius:8px;
+      padding:7px 12px; margin:3px 0;
+      border-left:4px solid {STIR_GREEN};
+      font-size:.82rem;
+  }}
+  .score-final {{
+      background:{STIR_GREEN}; color:white;
+      border-radius:12px; padding:28px 20px;
+      text-align:center; margin-bottom:18px;
+  }}
+  .breakdown-row {{
+      background:white; border-radius:8px;
+      padding:10px 14px; margin:4px 0;
+      box-shadow:0 1px 4px rgba(0,0,0,.07);
+  }}
+  .decision-log-item {{
+      background:white; border-radius:8px;
+      padding:9px 14px; margin:3px 0;
+      border-left:3px solid {STIR_GREEN};
+      font-size:.87rem;
+  }}
+  h1,h2,h3 {{ color:{STIR_GREEN}; }}
+  .round-pill {{
+      background:{STIR_LT}; color:white;
+      padding:3px 12px; border-radius:20px;
+      font-size:.82rem; font-weight:600;
+      display:inline-block; margin-bottom:8px;
+  }}
 </style>
 """, unsafe_allow_html=True)
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-BUDGET       = 32000
-SKILL_MULT   = {"Graduate Analyst": 0.80, "Consultant": 1.00, "Senior Partner": 1.25}
-WEEKLY_COST  = {"Graduate Analyst": 500,  "Consultant": 800,  "Senior Partner": 1200}
-OUT_CAP      = {"None": 0.00, "Selective": 0.20, "Full": 0.40}
-OUT_COST     = {"None": 0,    "Selective": 1500,  "Full": 3000}
-OUT_COORD    = {"None": 0,    "Selective": 5,     "Full": 12}
-MTG_COORD    = {"Light": -5,  "Balanced": 8,  "Intensive": 12}
-MTG_PROD     = {"Light": 0,   "Balanced": .03,"Intensive": .12}
-MTG_MORALE   = {"Light": -2,  "Balanced": 3,  "Intensive": -5}
-OT_CAP       = {"None": 0.00, "Allowed": 0.10,"Heavy": 0.22}
-OT_STRESS    = {"None": 0,    "Allowed": 6,   "Heavy": 14}
-OT_MORALE    = {"None": 0,    "Allowed": -3,  "Heavy": -9}
-SCOPE_TASKS  = {"Focused": 60,"Standard": 90,"Comprehensive": 120,"Full-Service": 150}
-PILOT_COST   = 1200
 
-PHASES = {
-    1: ("Phase 1 — Import Analysis",     "Weeks 1–3",  "Q1 & Q2: Sourcing strategy + financial implications"),
-    2: ("Phase 2 — Export Research",     "Weeks 4–6",  "Q3 & Q4: Global demand + target market selection"),
-    3: ("Phase 3 — Strategy Synthesis",  "Weeks 7–8+", "Q5 & Q6: Entry mode + financial projections"),
+# ══════════════════════════════════════════════════════════════════════════════
+# GAME DATA
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Round 1 decision tables ───────────────────────────────────────────────────
+
+SCOPE_OPTIONS = {
+    "Basic facility (core tanks only)": {
+        "scope_pct": 52, "cost_spent": 10, "tech_quality": 62,
+        "sustainability": 38, "risk_exposure": 14},
+    "Research hub (tanks + monitoring)": {
+        "scope_pct": 64, "cost_spent": 16, "tech_quality": 68,
+        "sustainability": 45, "risk_exposure": 22},
+    "Innovation hub (full research + industry)": {
+        "scope_pct": 74, "cost_spent": 24, "tech_quality": 70,
+        "sustainability": 50, "risk_exposure": 30},
+    "Flagship facility (maximum ambition)": {
+        "scope_pct": 84, "cost_spent": 32, "tech_quality": 68,
+        "sustainability": 55, "risk_exposure": 42},
 }
 
-SCENARIOS = {
-    "Scenario 1 – Balanced Engagement": {
-        "desc": "Standard 8-week engagement. Areej is cooperative, data arrives on time, brief is clear. The usual PM tensions — scope, quality, budget, people — all apply.",
-        "focus": "Core PM trade-offs · Iron Triangle",
-        "events": {},
-    },
-    "Scenario 2 – Consultant Leaves": {
-        "desc": "Week 4: your lead market research consultant goes off sick. Two fewer hands for two weeks, no immediate replacement. Brooks's Law on display.",
-        "focus": "People management · Brooks's Law",
-        "events": {4: "staffing_shock"},
-    },
-    "Scenario 3 – Deadline Compression": {
-        "desc": "Areej lands an unexpected distributor meeting at a trade fair — she needs your recommendations one week early. Parkinson's Law works in reverse.",
-        "focus": "Schedule pressure · Critical path",
-        "events": {4: "deadline_compress"},
-    },
-    "Scenario 4 – Scope Creep": {
-        "desc": "Areej asks you to also assess Latin America and evaluate sustainability certification — not in the original brief. Hold the line or absorb the change?",
-        "focus": "Scope change · Stakeholder management",
-        "events": {5: "scope_creep"},
-    },
-    "Scenario 5 – High Uncertainty": {
-        "desc": "Survey data has gaps, supplier dataset arrives with pricing errors, and Areej pivots her priority export region mid-project. Pilot analysis is your insurance.",
-        "focus": "Ambiguity · Rework spiral · Pilot analysis",
-        "events": {3: "unclear_needs", 5: "data_gap", 7: "req_change"},
-    },
+SCHEDULE_OPTIONS = {
+    "Relaxed (+20 % time buffer)": {"schedule_pressure": 10, "rework": 0},
+    "Standard schedule":           {"schedule_pressure": 22, "rework": 0},
+    "Accelerated (−15 % time)":    {"schedule_pressure": 38, "rework": 6},
+    "Fast-track (−25 % time)":     {"schedule_pressure": 54, "rework": 14},
 }
 
-RECS = {
-    "import_route": {
-        "q": "Which import strategy do you recommend to Areej?",
-        "opts": [
-            "UK Wholesaler only — find a new domestic supplier",
-            "International Wholesaler — better pricing, still arm\'s length",
-            "Direct from Source — cooperatives in Kenya, Assam, Ceylon",
-            "Combination — direct for primary origins, wholesaler as backup",
-        ],
-        "best": 3,
-        "why": "Areej values sustainability, exact pricing, and not exploiting farmers at source. A combination of direct sourcing (primary origins) with a wholesale safety net gives cost control, supply resilience, and ethical alignment.",
-    },
-    "export_region": {
-        "q": "Which region should Areej Tea prioritise for export first?",
-        "opts": [
-            "Western Europe — proximity, easy logistics",
-            "Asia-Pacific — growing premium market, appetite for imported goods",
-            "Middle East — luxury culture, strong gifting tradition",
-            "Latin America — emerging market, lower competition",
-        ],
-        "best": 1,
-        "why": "Areej explicitly said Europe is already saturated with premium brands. Asia-Pacific offers a growing appetite for premium imported goods and an untapped opportunity for authentic Scottish brand positioning.",
-    },
-    "entry_mode": {
-        "q": "How should Areej Tea enter international markets?",
-        "opts": [
-            "Direct-to-Consumer online — full margin, but high shipping and duties",
-            "International Wholesalers — lower margin, simpler, scalable",
-            "Own Distribution Centre — strategic control, high upfront cost",
-            "Start with wholesalers, layer in DTC as brand establishes",
-        ],
-        "best": 3,
-        "why": "Areej expressed concern about DTC margin erosion via shipping and duties. Starting with established wholesalers builds market presence with lower risk; adding DTC channels once brand is known is the proven internationalisation path for premium FMCG.",
-    },
-    "sustainability": {
-        "q": "On sustainability in sourcing — what is your recommendation?",
-        "opts": [
-            "No premium — optimise purely for lowest cost",
-            "Only if margin allows — conditional approach",
-            "Yes, pay sustainability premium — non-negotiable brand value",
-            "Pursue Fairtrade/Rainforest Alliance certification as differentiator",
-        ],
-        "best": 2,
-        "why": "Areej\'s exact words: \'We are willing to pay a little bit more so not to exploit farmers at source.\' Sustainability is a stated founder value, not a financial calculation. Recommending otherwise misreads the client.",
-    },
+PROCUREMENT_OPTIONS = {
+    "Standard procurement":        {"risk_exposure":  4, "cost_spent":  0},
+    "Early procurement":           {"risk_exposure": -4, "cost_spent":  5},
+    "Pre-qualified supplier list": {"risk_exposure": -9, "cost_spent":  8, "tech_quality": 4},
 }
 
-# ── State Init ────────────────────────────────────────────────────────────────
-def init_state():
-    d = dict(
-        phase="welcome", scenario=None, week=1, max_weeks=10,
-        budget=BUDGET, cost_spent=0.0,
-        morale=75.0, stress=30.0, quality=80.0, coordination=60.0,
-        tasks_completed=0.0, defects=0.0, tasks_required=90,
-        scope="Standard", schedule_target=8, team_size=4, skill="Consultant",
-        prototype_count=0, history=[], pending_event=None,
-        schedule_weight=100, hiring_freeze=0, event_log=[], final_score=None,
-        prev_team_size=4,
-        phase1_quality_sum=0.0, phase1_weeks=0,
-        phase2_quality_sum=0.0, phase2_weeks=0,
-        gate1_done=False, gate2_done=False,
-        rec_answers={}, rec_score=0,
-    )
-    for k, v in d.items():
+CONTRACTOR_OPTIONS = {
+    "Minimal contractor capacity": {"risk_exposure": 12, "cost_spent": -5, "tech_quality": -6},
+    "Standard contractor team":    {"risk_exposure":  0, "cost_spent":  0},
+    "Robust contractor capacity":  {"risk_exposure": -8, "cost_spent": 10, "tech_quality":  8},
+}
+
+SUSTAIN_OPTIONS = {
+    "Basic compliance only":         {"sustainability":  0, "stakeholder_conf": -8},
+    "Enhanced sustainability systems": {"sustainability": 15, "cost_spent": 8, "stakeholder_conf": 8},
+    "Flagship sustainability design":  {
+        "sustainability": 30, "cost_spent": 18,
+        "schedule_pressure": 10, "risk_exposure": 5, "stakeholder_conf": 14},
+}
+
+STAKEHOLDER_OPTIONS = {
+    "Minimal engagement":               {"stakeholder_conf": -10, "risk_exposure":  8},
+    "Standard communication":           {"stakeholder_conf":   0},
+    "Proactive stakeholder programme":  {"stakeholder_conf":  13, "cost_spent": 4, "risk_exposure": -5},
+}
+
+
+# ── Rounds 2 – 8 ─────────────────────────────────────────────────────────────
+
+ROUNDS = [
+    {
+        "num": 2,
+        "title": "Equipment Lead-Time Shock",
+        "icon": "⚠️",
+        "event": """Your specialist **water filtration and monitoring equipment** supplier has reported a **6-week lead-time delay** due to global supply chain pressures. The equipment is critical to both technical quality and sustainability performance. Without it, core facility systems cannot be completed on schedule.
+
+Your **Procurement Manager** and **Engineering Lead** must advise. The **Finance Manager** warns that any workaround will cost more. The **Stakeholder Manager** notes that funders are watching for schedule slippage.""",
+        "options": [
+            {
+                "key": "accept_delay",
+                "label": "Accept the delay and reschedule delivery",
+                "description": "Absorb the 6-week delay honestly. Adjust the internal programme and communicate with funders. Maintains quality but increases schedule pressure.",
+                "impact": {"schedule_pressure": +18, "stakeholder_conf": -7, "risk_exposure": -4, "cost_spent": +2},
+            },
+            {
+                "key": "switch_supplier",
+                "label": "Switch to an alternative (untested) supplier",
+                "description": "Source equipment from a new supplier. Faster, but the supplier is untested. Quality risk increases.",
+                "impact": {"schedule_pressure": +4, "cost_spent": +12, "tech_quality": -9, "risk_exposure": +11},
+            },
+            {
+                "key": "fast_track",
+                "label": "Fast-track procurement with premium delivery",
+                "description": "Pay for expedited delivery. Keeps schedule close to plan but is expensive and rushed delivery may introduce installation errors.",
+                "impact": {"schedule_pressure": +3, "cost_spent": +22, "rework": +9, "risk_exposure": +4},
+            },
+            {
+                "key": "reduce_scope",
+                "label": "Remove the delayed component from scope",
+                "description": "Remove the affected systems from this phase. Cheaper and faster, but reduces scope and sustainability performance.",
+                "impact": {"scope_pct": -10, "schedule_pressure": -8, "sustainability": -12, "risk_exposure": -7},
+            },
+        ],
+    },
+    {
+        "num": 3,
+        "title": "Researcher Scope Request",
+        "icon": "🔬",
+        "event": """Your research partner has submitted a formal request to expand the facility: **additional experimental tanks, enhanced monitoring stations, and a shared data analysis lab**. The team argues this significantly increases scientific value and will attract future funding.
+
+The request is legitimate but unplanned. The **Finance Manager** flags cost risk. The **Engineering Lead** warns of programme extension. The **Stakeholder Manager** says accepting it will impress funders — but may compromise your schedule commitment.""",
+        "options": [
+            {
+                "key": "accept_full",
+                "label": "Accept in full",
+                "description": "Add all requested scope. Maximises research value but significantly increases cost, schedule pressure and risk.",
+                "impact": {"scope_pct": +13, "cost_spent": +18, "schedule_pressure": +13, "risk_exposure": +12, "stakeholder_conf": +12, "tech_quality": -5},
+            },
+            {
+                "key": "accept_partial",
+                "label": "Accept partial scope (monitoring stations only)",
+                "description": "A balanced trade-off — adds value without fully overloading schedule and budget.",
+                "impact": {"scope_pct": +7, "cost_spent": +8, "schedule_pressure": +5, "risk_exposure": +4, "stakeholder_conf": +8},
+            },
+            {
+                "key": "defer_phase2",
+                "label": "Defer entire request to Phase 2",
+                "description": "Acknowledge the value but defer to a formally scoped second phase. Pragmatic and honest.",
+                "impact": {"stakeholder_conf": +3, "risk_exposure": -4, "schedule_pressure": -2, "sustainability": +3},
+            },
+            {
+                "key": "reject",
+                "label": "Reject the request entirely",
+                "description": "Decline to protect cost and schedule. Saves budget but damages researcher and funder relationships.",
+                "impact": {"stakeholder_conf": -14, "risk_exposure": -7, "schedule_pressure": -4, "cost_spent": -2},
+            },
+        ],
+    },
+    {
+        "num": 4,
+        "title": "Sustainability Review",
+        "icon": "🌿",
+        "event": """An independent audit triggered by your funder has flagged that current plans meet only **minimum environmental standards**. The funder's criteria require at least 'enhanced' sustainability for the final payment tranche.
+
+The **Engineering Lead** says enhanced systems are technically feasible but require redesign. The **Finance Manager** warns of added cost. The **Stakeholder Manager** says strong sustainability credentials will significantly improve community and partner confidence.""",
+        "options": [
+            {
+                "key": "basic",
+                "label": "Maintain basic compliance — argue minimum is sufficient",
+                "description": "Saves cost but risks funder relationship and stakeholder confidence. Sustainability score remains weak.",
+                "impact": {"sustainability": -5, "stakeholder_conf": -15, "risk_exposure": +10},
+            },
+            {
+                "key": "enhanced",
+                "label": "Upgrade to enhanced sustainability systems",
+                "description": "Invest in improved water recirculation and energy monitoring. Strong balance of performance and cost.",
+                "impact": {"sustainability": +22, "stakeholder_conf": +12, "cost_spent": +10, "tech_quality": +5, "risk_exposure": -5},
+            },
+            {
+                "key": "flagship",
+                "label": "Full flagship sustainability redesign",
+                "description": "Redesign around leading sustainability standards. Highest reputational value but major cost and schedule impact.",
+                "impact": {"sustainability": +35, "stakeholder_conf": +20, "cost_spent": +28, "schedule_pressure": +18, "risk_exposure": +8, "rework": +10},
+            },
+            {
+                "key": "phased",
+                "label": "Phased upgrade — enhanced now, flagship deferred",
+                "description": "Commit to enhanced systems now. Flagship elements deferred to a funded second phase. Balanced and credible.",
+                "impact": {"sustainability": +14, "stakeholder_conf": +8, "cost_spent": +6, "risk_exposure": +2},
+            },
+        ],
+    },
+    {
+        "num": 5,
+        "title": "Community and Planning Concern",
+        "icon": "🏘️",
+        "event": """A local residents group has submitted formal concerns to the planning authority about **site access routes, construction noise, lighting impact and long-term environmental effects**. If unaddressed, a planning delay notice is possible.
+
+The **Stakeholder Manager** says this is manageable but takes time. The **Project Manager** notes engagement costs schedule days. The **Finance Manager** points out that a planning delay would cost far more than early engagement.""",
+        "options": [
+            {
+                "key": "ignore",
+                "label": "Ignore the concerns — continue construction",
+                "description": "No engagement. High probability of planning intervention. Fastest short-term but highest long-term risk.",
+                "impact": {"stakeholder_conf": -22, "risk_exposure": +18, "schedule_pressure": +8},
+            },
+            {
+                "key": "minimal",
+                "label": "Minimal response — formal written clarification",
+                "description": "Low effort. Addresses surface concerns but insufficient for deeper community anxieties.",
+                "impact": {"stakeholder_conf": -7, "risk_exposure": +5, "schedule_pressure": +2},
+            },
+            {
+                "key": "full",
+                "label": "Full community engagement process",
+                "description": "Organise a meeting, address concerns and adjust site access. Strong outcome at a moderate schedule cost.",
+                "impact": {"stakeholder_conf": +16, "risk_exposure": -12, "schedule_pressure": +8, "cost_spent": +5},
+            },
+            {
+                "key": "co_design",
+                "label": "Co-design process with community involvement",
+                "description": "Invite the community into the design of affected elements. Highest trust outcome, highest schedule cost.",
+                "impact": {"stakeholder_conf": +22, "risk_exposure": -18, "schedule_pressure": +15, "cost_spent": +8, "sustainability": +8},
+            },
+        ],
+    },
+    {
+        "num": 6,
+        "title": "Funder Milestone Pressure",
+        "icon": "💼",
+        "event": """The funder's programme officer has requested **visible evidence of progress** before releasing the next funding tranche. They want completed physical construction elements and a progress report.
+
+Privately, your **Engineering Lead** reports that while visible construction looks good, **critical technical systems are behind** and not yet integrated. The **Finance Manager** warns that without the next tranche, cash flow becomes difficult within six weeks.""",
+        "options": [
+            {
+                "key": "showcase_only",
+                "label": "Showcase visible progress only — don't disclose technical gaps",
+                "description": "Secures funding short-term, but hidden technical gaps continue to grow. Increases rework and quality risk.",
+                "impact": {"stakeholder_conf": +8, "rework": +13, "tech_quality": -9, "risk_exposure": +12},
+            },
+            {
+                "key": "honest",
+                "label": "Provide honest, balanced assessment to funder",
+                "description": "Present achievements alongside outstanding technical work. May concern funder short-term but protects long-term trust.",
+                "impact": {"stakeholder_conf": +5, "risk_exposure": -10, "tech_quality": +5},
+            },
+            {
+                "key": "accelerate",
+                "label": "Accelerate visible milestones to satisfy funder",
+                "description": "Redirect resource to complete visible elements faster. Satisfies funder but diverts from critical technical work.",
+                "impact": {"schedule_pressure": -4, "cost_spent": +14, "rework": +16, "tech_quality": -11, "risk_exposure": +8},
+            },
+            {
+                "key": "request_ext",
+                "label": "Request a milestone reporting extension",
+                "description": "Ask the funder for more time to complete properly. Risks funder frustration but avoids misrepresentation.",
+                "impact": {"schedule_pressure": -10, "stakeholder_conf": -12, "tech_quality": +10, "risk_exposure": -8},
+            },
+        ],
+    },
+    {
+        "num": 7,
+        "title": "Technical Integration Problem",
+        "icon": "⚙️",
+        "event": """Your **Engineering Lead** has escalated a critical issue: the **HVAC environmental control system and water treatment system are not integrating correctly**. Sensor incompatibility and failing data feeds have emerged. This affects the facility's core operating capability.
+
+The Engineering Lead estimates three weeks to resolve properly. The **Finance Manager** notes the project is already at 75 % of budget. The **Project Manager** must decide before the problem compounds.""",
+        "options": [
+            {
+                "key": "overtime",
+                "label": "Overtime push with existing team",
+                "description": "Extend working hours to resolve the issue. Lower cost but increases team fatigue and may not fully fix the root cause.",
+                "impact": {"cost_spent": +10, "rework": +8, "tech_quality": +8, "schedule_pressure": +5},
+            },
+            {
+                "key": "specialist",
+                "label": "Bring in an external integration specialist",
+                "description": "Hire a specialist systems integrator to diagnose and resolve fully. Most effective but expensive.",
+                "impact": {"cost_spent": +22, "tech_quality": +20, "schedule_pressure": -5, "risk_exposure": -13, "rework": -5},
+            },
+            {
+                "key": "reduce_tech",
+                "label": "Defer the integration — launch with manual monitoring",
+                "description": "Remove the linked monitoring function. Saves time but reduces technical quality and sustainability performance.",
+                "impact": {"scope_pct": -8, "risk_exposure": -7, "tech_quality": -13, "sustainability": -8, "cost_spent": +2},
+            },
+            {
+                "key": "delay_launch",
+                "label": "Delay launch to resolve integration properly",
+                "description": "Take the time needed for a full, clean resolution. Protects quality long-term but significantly impacts schedule.",
+                "impact": {"schedule_pressure": +20, "stakeholder_conf": -8, "tech_quality": +18, "risk_exposure": -10, "rework": -8},
+            },
+        ],
+    },
+    {
+        "num": 8,
+        "title": "Final Delivery Decision",
+        "icon": "🏁",
+        "event": """You have reached the **final decision point**. The facility is substantially complete. Your team must now define the official project outcome and present it to the project board.
+
+Your dashboard shows cumulative performance across all metrics. This final decision affects how stakeholders perceive the project and your team's credibility. Choose carefully — and be ready to defend your position.""",
+        "options": [
+            {
+                "key": "full_launch",
+                "label": "Full facility launch — declare complete success",
+                "description": "Open all systems and present the project as fully complete. Strong confidence outcome — but if quality is low, this is a gamble.",
+                "impact": {"stakeholder_conf": +15, "risk_exposure": +8, "scope_pct": +5},
+            },
+            {
+                "key": "partial_launch",
+                "label": "Partial launch with documented scope adjustment",
+                "description": "Open the core facility and formally document what has been adjusted or deferred. Honest and defensible.",
+                "impact": {"stakeholder_conf": +5, "risk_exposure": -12, "scope_pct": -5, "tech_quality": +5},
+            },
+            {
+                "key": "phase_delivery",
+                "label": "Phase 1 completion — communicate phased roadmap",
+                "description": "Present this as a successful Phase 1 with a clear Phase 2 plan. Professional framing with strong governance.",
+                "impact": {"stakeholder_conf": +8, "risk_exposure": -15, "scope_pct": -8, "sustainability": +5, "tech_quality": +8},
+            },
+            {
+                "key": "extend",
+                "label": "Recommend formal extension to the project board",
+                "description": "Honest recommendation that more time is needed for quality. Lowest short-term confidence, highest long-term value protection.",
+                "impact": {"schedule_pressure": -15, "stakeholder_conf": -15, "tech_quality": +16, "risk_exposure": -18},
+            },
+        ],
+    },
+]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STATE MANAGEMENT
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _init():
+    defaults = {
+        "phase":         "welcome",   # welcome | round1 | game | results
+        "round":         2,           # current round (2-8 during game phase)
+        "team_name":     "",
+        "decisions_log": [],
+        "metrics": {
+            "scope_pct":        0,
+            "schedule_pressure": 0,
+            "cost_spent":        0,
+            "tech_quality":      0,
+            "sustainability":    0,
+            "stakeholder_conf":  0,
+            "risk_exposure":     0,
+            "rework":            0,
+        },
+        "history": [],
+    }
+    for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 
-init_state()
-s = st.session_state
 
-def current_phase():
-    if s.week <= 3: return 1
-    if s.week <= 6: return 2
-    return 3
+def _apply(impact: dict):
+    m = st.session_state.metrics
+    for key, delta in impact.items():
+        if key in m:
+            m[key] = max(0, min(100, m[key] + delta))
+    st.session_state.metrics = m
+    st.session_state.history.append(m.copy())
 
-def phase_label():
-    ph = current_phase()
-    return PHASES[ph]
 
-# ── Compute Week ──────────────────────────────────────────────────────────────
-def compute_week(team_size, skill, outsourcing, overtime, meetings, pilot):
-    # Base output
-    base = team_size * SKILL_MULT[skill] * 6
-    # Learning curve: team gets faster as they understand the case (2%/week, cap 15%)
-    learning = min(1.15, 1.0 + (s.week - 1) * 0.02)
-    # If team size changed significantly, learning resets partially (Brooks\'s Law)
-    if abs(team_size - s.prev_team_size) >= 2:
-        learning = 1.0 + (learning - 1.0) * 0.4
-    morale_f   = s.morale / 100
-    stress_f   = max(0.45, 1 - s.stress / 140)
-    coord_f    = s.coordination / 100
-    out_f      = 1 + OUT_CAP[outsourcing]
-    ot_f       = 1 + OT_CAP[overtime]
-    mtg_pen    = 1 - MTG_PROD[meetings]
-    output = base * learning * morale_f * stress_f * coord_f * out_f * ot_f * mtg_pen
+def _final_score() -> int:
+    m = st.session_state.metrics
+    s  = (m["scope_pct"] / 100) * 200
+    s += max(0, (100 - m["schedule_pressure"]) / 100) * 200
+    cost_ctrl = max(0, 100 - max(0, m["cost_spent"] - 80)) / 100
+    s += cost_ctrl * 180
+    s += (m["tech_quality"]      / 100) * 160
+    s += (m["sustainability"]    / 100) * 130
+    s += (m["stakeholder_conf"]  / 100) * 80
+    s += max(0, (100 - m["risk_exposure"]) / 100) * 50
+    s -= (m["rework"] / 100) * 40         # rework penalty
+    return int(round(max(0, min(1000, s))))
 
-    # Quality
-    q = 85
-    if skill == "Senior Partner": q += 5
-    if skill == "Graduate Analyst": q -= 7
-    q -= s.stress * 0.20
-    if pilot: q += 6
-    q += s.coordination * 0.05
-    if overtime == "Heavy": q -= 8
-    # Critical path: if Phase 1 quality was poor, Phase 3 synthesis suffers
-    if current_phase() == 3 and s.phase1_weeks > 0:
-        p1q = s.phase1_quality_sum / s.phase1_weeks
-        if p1q < 68:
-            q -= 10  # built on shaky analytical foundations
-    q = min(100, max(0, q))
 
-    rework = output * max(0, (75 - q)) / 100
-    net    = max(0, output - rework)
+def _grade(score: int):
+    if score >= 800: return "Distinction", "🏆", "#00573F"
+    if score >= 650: return "Merit",       "🥈", "#4A9B6F"
+    if score >= 500: return "Pass",        "✅", "#2E7D32"
+    return "Below Pass", "⚠️", "#C62828"
 
-    cost = team_size * WEEKLY_COST[skill] + OUT_COST[outsourcing] + (PILOT_COST if pilot else 0)
 
-    # Stress
-    rem_tasks = max(0, s.tasks_required - s.tasks_completed)
-    rem_weeks = max(1, s.schedule_target - s.week + 1)
-    dl_press  = (rem_tasks / rem_weeks) / 15
-    new_stress = s.stress + dl_press + OT_STRESS[overtime]
-    new_stress += max(0, team_size - 8) * 1.5
-    if meetings == "Balanced": new_stress -= 3
-    new_stress = min(100, max(0, new_stress))
+# ══════════════════════════════════════════════════════════════════════════════
+# SHARED WIDGETS
+# ══════════════════════════════════════════════════════════════════════════════
 
-    # Morale
-    new_morale = s.morale + MTG_MORALE[meetings] + OT_MORALE[overtime]
-    new_morale -= max(0, new_stress - 65) * 0.08
-    new_morale += 2 if net >= 8 else -2
-    new_morale = min(100, max(0, new_morale))
+def _sidebar_dashboard():
+    m = st.session_state.metrics
+    with st.sidebar:
+        st.markdown(f"### 📊 Live Dashboard")
+        if st.session_state.team_name:
+            st.markdown(f"**Team:** {st.session_state.team_name}")
 
-    # Coordination
-    new_coord = s.coordination + MTG_COORD[meetings]
-    new_coord -= OUT_COORD[outsourcing]
-    new_coord -= max(0, team_size - 7) * 2
-    if pilot: new_coord += 5
-    new_coord = min(100, max(0, new_coord))
+        items = [
+            ("🎯 Scope Delivered",     "scope_pct",         False, "%"),
+            ("⏱️ Schedule Pressure",   "schedule_pressure",  True, "%"),
+            ("💰 Cost Spent",          "cost_spent",         True, "% budget"),
+            ("🔧 Technical Quality",   "tech_quality",      False, "/100"),
+            ("🌿 Sustainability",      "sustainability",     False, "/100"),
+            ("🤝 Stakeholder Conf.",   "stakeholder_conf",  False, "/100"),
+            ("⚠️ Risk Exposure",       "risk_exposure",      True, "/100"),
+            ("🔄 Rework",              "rework",             True, "/100"),
+        ]
+        for label, key, lower_is_better, unit in items:
+            val = m[key]
+            if lower_is_better:
+                col = "#00573F" if val <= 30 else "#F57F17" if val <= 60 else "#C62828"
+            else:
+                col = "#C62828" if val <= 30 else "#F57F17" if val <= 60 else "#00573F"
+            st.markdown(f"""
+            <div style="background:rgba(255,255,255,.13);border-radius:7px;
+                        padding:7px 11px;margin:3px 0;border-left:4px solid {col};">
+              <span style="font-size:.78rem;opacity:.8;">{label}</span><br>
+              <span style="font-size:1.2rem;font-weight:700;color:{col};">{val:.0f}{unit}</span>
+            </div>""", unsafe_allow_html=True)
 
-    # Track phase quality
-    ph = current_phase()
-    if ph == 1:
-        s.phase1_quality_sum += q
-        s.phase1_weeks       += 1
-    elif ph == 2:
-        s.phase2_quality_sum += q
-        s.phase2_weeks       += 1
+        if st.session_state.phase in ("game", "results"):
+            proj = _final_score()
+            st.markdown("---")
+            st.markdown(f"""
+            <div style="background:rgba(255,255,255,.18);border-radius:8px;
+                        padding:12px;text-align:center;">
+              <div style="font-size:.78rem;opacity:.8;">Projected Score</div>
+              <div style="font-size:2.2rem;font-weight:700;">{proj}</div>
+              <div style="font-size:.75rem;opacity:.65;">out of 1 000</div>
+            </div>""", unsafe_allow_html=True)
 
-    s.tasks_completed += net
-    s.defects         += rework
-    s.cost_spent      += cost
-    s.morale           = new_morale
-    s.stress           = new_stress
-    s.quality          = q
-    s.coordination     = new_coord
-    s.prev_team_size   = team_size
-    if pilot: s.prototype_count += 1
 
-    return dict(week=s.week, net=round(net,1), rework=round(rework,1),
-                cost=round(cost), quality=round(q,1), morale=round(new_morale,1),
-                stress=round(new_stress,1), team=team_size, skill=skill,
-                outsourcing=outsourcing, overtime=overtime, meetings=meetings, pilot=pilot)
+def _radar_chart():
+    m = st.session_state.metrics
+    cats = ["Scope", "Schedule", "Cost\nControl", "Technical\nQuality",
+            "Sustainability", "Stakeholder\nConf.", "Risk\nControl"]
+    vals = [
+        m["scope_pct"],
+        max(0, 100 - m["schedule_pressure"]),
+        max(0, 100 - max(0, (m["cost_spent"] - 80)) * 5),
+        m["tech_quality"],
+        m["sustainability"],
+        m["stakeholder_conf"],
+        max(0, 100 - m["risk_exposure"]),
+    ]
+    vals = [min(100, max(0, v)) for v in vals]
 
-def calc_final_score():
-    done  = s.tasks_completed
-    req   = s.tasks_required
-    scope_s    = min(250, 250 * done / req)
-    delay      = max(0, s.week - 1 - s.schedule_target)
-    sched_s    = 250 if (done >= req and s.week - 1 <= s.schedule_target) else max(0, 250 - delay * 50)
-    cost_s     = max(0, 200 * (1 - max(0, s.cost_spent - s.budget) / s.budget))
-    qual_s     = 150 * s.quality / 100
-    team_s     = 150 * ((s.morale/100)*0.6 + ((100-s.stress)/100)*0.4)
-    total      = scope_s + sched_s + cost_s + qual_s + team_s
-    return dict(scope=round(scope_s), schedule=round(sched_s), cost=round(cost_s),
-                quality=round(qual_s), team=round(team_s), total=round(total))
+    fig = go.Figure(go.Scatterpolar(
+        r=vals + [vals[0]], theta=cats + [cats[0]],
+        fill="toself",
+        fillcolor="rgba(0,87,63,.18)",
+        line=dict(color=STIR_GREEN, width=2.5),
+        marker=dict(color=STIR_GREEN, size=6),
+    ))
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100], tickfont=dict(size=8)),
+            angularaxis=dict(tickfont=dict(size=10)),
+        ),
+        showlegend=False,
+        margin=dict(l=20, r=20, t=20, b=20),
+        height=280,
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+    return fig
 
-def apply_event(key, choice=None):
-    if key == "staffing_shock":
-        s.team_size_post_shock = max(3, s.team_size_snapshot - 2)
-        s.morale   = max(0, s.morale - 8)
-        s.stress   = min(100, s.stress + 10)
-        s.hiring_freeze = 2
-        s.event_log.append("Week 4: Lead consultant off sick — 2 fewer people, hiring freeze for 2 weeks. (Brooks\'s Law: the remaining team now spends time covering gaps.)")
 
-    elif key == "deadline_compress":
-        s.schedule_target = max(s.week, s.schedule_target - 1)
-        s.stress = min(100, s.stress + 12)
-        s.schedule_weight = 180
-        s.event_log.append("Week 4: Areej secured a distributor meeting at a trade fair — deadline moved forward 1 week.")
-
-    elif key == "scope_creep":
-        if choice == "full":
-            s.tasks_required += 25
-            s.morale = max(0, s.morale - 5)
-            s.event_log.append("Week 5: Full scope accepted — Latin America + sustainability audit (+25 deliverables). Schedule at serious risk.")
-        elif choice == "partial":
-            s.tasks_required += 12
-            s.event_log.append("Week 5: Partial scope accepted — Latin America only (+12 deliverables). Compromise reached.")
+def _progress_bar(current_round: int):
+    """Horizontal round-progress dots."""
+    dots = ""
+    for i in range(1, 9):
+        if i < current_round:
+            col, sym = "#00573F", "●"
+        elif i == current_round:
+            col, sym = "#4A9B6F", "◉"
         else:
-            s.event_log.append("Week 5: Scope held — original brief maintained. Client relationship risk acknowledged.")
+            col, sym = "#BCD8CC", "○"
+        dots += f'<span style="color:{col};font-size:1.4rem;margin:0 4px;" title="Round {i}">{sym}</span>'
+    st.markdown(
+        f'<div style="text-align:center;margin:-10px 0 16px;">{dots}</div>',
+        unsafe_allow_html=True,
+    )
 
-    elif key == "unclear_needs":
-        pen = 0.5 if s.prototype_count >= 1 else 1.0
-        lost = round(8 * pen)
-        s.tasks_completed = max(0, s.tasks_completed - lost)
-        s.event_log.append(f"Week 3: Market survey has insufficient responses for 3 target markets. Rework required ({lost} deliverables lost). Pilot analysis halves this penalty.")
 
-    elif key == "data_gap":
-        pen = 0.5 if s.prototype_count >= 2 else 1.0
-        lost = round(12 * pen)
-        s.tasks_completed = max(0, s.tasks_completed - lost)
-        s.stress = min(100, s.stress + 8)
-        s.event_log.append(f"Week 5: Supplier dataset has pricing errors — financial analysis must be redone ({lost} deliverables lost).")
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGES
+# ══════════════════════════════════════════════════════════════════════════════
 
-    elif key == "req_change":
-        pen = 0.5 if s.prototype_count >= 2 else 1.0
-        lost = round(10 * pen)
-        s.tasks_completed = max(0, s.tasks_completed - lost)
-        s.event_log.append(f"Week 7: Areej pivots priority export region to the Middle East after a new distributor contact ({lost} deliverables lost).")
-
-# ── Sidebar ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.image("https://img.icons8.com/color/96/tea.png", width=56)
-    st.markdown("## The Areej Tea Company Brief")
-    st.caption("MSc Project Management Simulation")
-    st.divider()
-    if s.phase not in ("welcome","setup"):
-        ph_name, ph_weeks, ph_qs = phase_label()
-        st.markdown(f"""<div class="phase-bar"><b>{ph_name}</b><br>
-        <small>{ph_weeks} &nbsp;|&nbsp; {ph_qs}</small></div>""", unsafe_allow_html=True)
-        prog = min(1.0, s.tasks_completed / max(1, s.tasks_required))
-        st.markdown("**Deliverables**")
-        st.progress(prog)
-        st.caption(f"{round(s.tasks_completed)} / {s.tasks_required} ({round(prog*100)}%)")
-        st.divider()
-        budget_left = max(0, s.budget - round(s.cost_spent))
-        budget_pct  = round((s.cost_spent / s.budget) * 100) if s.budget else 0
-        c1,c2 = st.columns(2)
-        c1.metric("Remaining", f"£{budget_left:,}", f"-£{round(s.cost_spent):,} spent")
-        c2.metric("Week", f"{s.week} / {s.max_weeks}")
-        st.caption(f"Budget used: {budget_pct}% of £{s.budget:,}")
-        st.progress(min(1.0, s.cost_spent / s.budget))
-        st.divider()
-        st.markdown(f"**Morale:** {round(s.morale)}/100")
-        st.progress(s.morale/100)
-        st.markdown(f"**Stress:** {round(s.stress)}/100")
-        st.progress(s.stress/100)
-        st.markdown(f"**Quality:** {round(s.quality)}/100")
-        st.progress(s.quality/100)
-        if s.phase1_weeks > 0:
-            p1q = round(s.phase1_quality_sum / s.phase1_weeks)
-            st.caption(f"Phase 1 avg quality: {p1q}/100")
-        st.divider()
-    if st.button("Restart", use_container_width=True):
-        for k in list(st.session_state.keys()): del st.session_state[k]
-        st.rerun()
-    st.divider()
-    st.caption("Designed by **Areej Riaz** · University of Stirling")
-
-# ── WELCOME ───────────────────────────────────────────────────────────────────
-if s.phase == "welcome":
-    st.markdown("""<div class="main-header">
-    <h1>The Areej Tea Company Brief</h1>
-    <p>International Strategy Consultancy Simulation &nbsp;·&nbsp; MSc Project Management</p>
+# ── Welcome ───────────────────────────────────────────────────────────────────
+def page_welcome():
+    st.markdown(f"""
+    <div class="hdr">
+      <h1>🌊 AquaHub Delivery Challenge</h1>
+      <p>Project Management Simulation &nbsp;·&nbsp; MSc Project Management Programme</p>
+      <p style="font-size:.82rem;opacity:.65;">University of Stirling</p>
     </div>""", unsafe_allow_html=True)
 
-    c1,c2,c3 = st.columns([1,2,1])
-    with c2:
-        st.markdown("""<div class="brief-box">
-        <h3>Why a simulation?</h3>
-        <p>Reading a case study tells you <em>what</em> happened. This simulation puts you <em>inside</em> it.
-        Every decision you make compounds — just as it does in a real consultancy engagement.
-        You will feel Brooks\'s Law, the overtime paradox, the rework spiral, and the critical path
-        dependency firsthand. Then you will debrief against real data.</p>
-        <h3>Your Mission</h3>
-        <p>You are a consultancy team hired by <strong>Areej Riaz</strong>, founder of
-        <strong>Areej Tea Company</strong> — a Scottish premium tea brand with
-        £3.1M turnover, 800 stockists, and a collapsing supplier relationship.
-        She needs strategic recommendations on two urgent problems:</p>
-        <ul>
-        <li><strong>Import crisis:</strong> Her tea leaf supplier tried to near-double prices.
-        Find a new strategy — UK wholesale, international wholesale, or direct from source.</li>
-        <li><strong>Export ambition:</strong> Which markets? Which entry mode — DTC, wholesale,
-        or distribution centre? What are the financial implications?</li>
-        </ul>
-        <p>You have <strong>£32,000</strong> (Areej\'s professional services budget for this engagement)
-        and up to 8 weeks to deliver a strategy report and present to her board.</p>
-        <p>Your goal is not just to finish — it is to deliver <strong>rigorous analysis, on time,
-        within budget, without burning out your team.</strong></p>
-        </div>""", unsafe_allow_html=True)
+    col_l, col_r = st.columns([3, 2])
 
-        st.markdown("**Your Consultancy Team Roles**")
-        for r,d in {
-            "Project Lead":"Overall accountability. Makes the call each week.",
-            "Finance Consultant":"Monitors the £32,000 budget and fee burn.",
-            "Research Analyst":"Tracks deliverable quality and rework.",
-            "Client Manager":"Manages Areej\'s expectations and scope.",
-        }.items():
-            st.markdown(f"**{r}** — {d}")
+    with col_l:
+        st.markdown("""
+### Welcome
 
-        st.divider()
-        if st.button("Begin Simulation", use_container_width=True, type="primary"):
-            s.phase = "setup"; st.rerun()
+You are the project delivery team responsible for managing the
+**AquaHub sustainable aquaculture research and innovation facility**
+for the University of Stirling.
 
-# ── SETUP ─────────────────────────────────────────────────────────────────────
-elif s.phase == "setup":
-    st.markdown("""<div class="main-header">
-    <h1>Set Up Your Engagement</h1>
-    <p>Choose your scenario and opening plan</p>
+The project is strategically important — but constrained by limited budget,
+fixed milestone pressure, specialist procurement, sustainability commitments,
+stakeholder scrutiny and technical uncertainty.
+
+**Your task:** make decisions across **8 rounds** as real project conditions
+change. Every decision affects scope, cost, schedule, quality, sustainability,
+stakeholder trust and risk. There is no single perfect answer.
+
+---
+**How to play**
+
+1. Enter your team name and click **Begin Simulation**
+2. **Round 1** — set your initial project strategy across six dimensions
+3. **Rounds 2 – 8** — respond to live project events with one key decision each
+4. Your dashboard updates after every decision
+5. After Round 8 — see your final score and breakdown
+        """)
+
+        st.markdown("#### 🏷️ Team Setup")
+        tname = st.text_input("Team name:", placeholder="e.g. Team Osprey")
+        if st.button("Begin Simulation →", use_container_width=True):
+            if tname.strip():
+                st.session_state.team_name = tname.strip()
+                st.session_state.phase = "round1"
+                st.rerun()
+            else:
+                st.error("Please enter a team name.")
+
+    with col_r:
+        st.markdown("#### 🎭 Project Team Roles")
+        for icon, role, desc in [
+            ("🎯", "Project Manager",    "Coordination, final decisions, trade-off management"),
+            ("⚙️", "Engineering Lead",   "Technical feasibility, quality, integration"),
+            ("📦", "Procurement Manager","Suppliers, equipment, contractor capacity"),
+            ("💰", "Finance Manager",    "Budget control, contingency, cost escalation"),
+            ("🤝", "Stakeholder Manager","Funders, researchers, community, sustainability"),
+        ]:
+            st.markdown(f"""
+            <div style="background:white;border-radius:8px;padding:9px 13px;margin:5px 0;
+                        border-left:3px solid {STIR_GREEN};font-size:.85rem;">
+              <strong>{icon} {role}</strong><br>
+              <span style="color:#555;">{desc}</span>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown("#### 📊 Scoring Model (1 000 pts)")
+        for metric, pts in [
+            ("Scope Delivered", 200), ("Schedule Performance", 200),
+            ("Cost Control", 180),    ("Technical Quality", 160),
+            ("Sustainability", 130),  ("Stakeholder Confidence", 80),
+            ("Risk Management", 50),
+        ]:
+            bar = int(pts / 200 * 100)
+            st.markdown(f"""
+            <div style="margin:3px 0;font-size:.8rem;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>{metric}</span>
+                <span style="color:{STIR_GREEN};font-weight:600;">{pts}</span>
+              </div>
+              <div style="background:#E8F5EE;border-radius:4px;height:5px;margin-top:2px;">
+                <div style="background:{STIR_GREEN};width:{bar}%;height:5px;border-radius:4px;"></div>
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+
+# ── Round 1 ───────────────────────────────────────────────────────────────────
+def page_round1():
+    _sidebar_dashboard()
+
+    st.markdown(f"""
+    <div class="hdr">
+      <span class="round-pill">Round 1 of 8</span>
+      <h2>Project Initiation</h2>
+      <p>Set your project strategy — these foundational choices shape your entire risk profile</p>
     </div>""", unsafe_allow_html=True)
 
-    c1,c2 = st.columns(2)
-    with c1:
-        st.markdown("### Choose a Scenario")
-        sc_name = st.radio("", list(SCENARIOS.keys()), label_visibility="collapsed")
-        sc = SCENARIOS[sc_name]
-        st.markdown(f"""<div class="brief-box">
-        <b>PM focus:</b> {sc["focus"]}<br><br>{sc["desc"]}</div>""", unsafe_allow_html=True)
+    _progress_bar(1)
 
-    with c2:
-        st.markdown("### Opening Plan")
-        scope = st.selectbox("Engagement scope", list(SCOPE_TASKS.keys()), index=1,
-            help="Focused=60 (import only) | Standard=90 | Comprehensive=120 | Full-Service=150")
-        st.caption({
-            "Focused":"Import strategy only (Q1–Q2)",
-            "Standard":"Import + export strategy (Q1–Q6)",
-            "Comprehensive":"Full strategy + competitor benchmarking",
-            "Full-Service":"Complete analysis + sensitivity modelling",
-        }[scope] + f" — {SCOPE_TASKS[scope]} deliverables")
-
-        schedule = st.slider("Delivery target (weeks)", 6, 9, 8)
-        team     = st.slider("Starting team size", 2, 8, 4)
-        skill    = st.selectbox("Consultant grade", list(SKILL_MULT.keys()), index=1)
-        wk_cost  = team * WEEKLY_COST[skill]
-        st.caption(f"Weekly fee burn: £{wk_cost:,}  |  {schedule}-week estimate: £{wk_cost*schedule:,}")
-        pct = round(wk_cost * schedule / BUDGET * 100)
-        st.info(f"That uses **{pct}%** of the £{BUDGET:,} budget before any extras.")
-
-    st.divider()
-    if st.button("Start Engagement", use_container_width=True, type="primary"):
-        s.scenario=sc_name; s.scope=scope; s.tasks_required=SCOPE_TASKS[scope]
-        s.schedule_target=schedule; s.team_size=team; s.skill=skill
-        s.prev_team_size=team; s.phase="playing"; st.rerun()
-
-# ── PLAYING ───────────────────────────────────────────────────────────────────
-elif s.phase == "playing":
-    sc_events = SCENARIOS[s.scenario]["events"]
-    if s.week in sc_events and s.pending_event is None:
-        evt = sc_events[s.week]
-        if evt == "scope_creep":
-            s.pending_event = evt; s.phase = "event"; st.rerun()
-        else:
-            if evt == "staffing_shock": s.team_size_snapshot = s.team_size
-            apply_event(evt)
-            if evt == "staffing_shock" and hasattr(s,"team_size_post_shock"):
-                s.team_size = s.team_size_post_shock
-
-    # Phase gates
-    if s.week == 4 and not s.gate1_done:
-        s.phase = "gate1"; st.rerun()
-    if s.week == 7 and not s.gate2_done:
-        s.phase = "gate2"; st.rerun()
-
-    ph_name, ph_wks, ph_qs = phase_label()
-    st.markdown(f"""<div class="main-header">
-    <h1>Week {s.week} — {ph_name}</h1>
-    <p>{ph_qs} &nbsp;·&nbsp; {s.scenario}</p>
+    st.markdown("""
+    <div class="card">
+    <p>The AquaHub facility has been formally approved. Your team must now make the foundational
+    decisions that will govern how the project is managed from this point forward.</p>
+    <p>The <strong>Project Manager</strong> leads this session. Each role should contribute before the
+    team agrees a collective position. Remember: high ambition requires strong resources — and a
+    realistic timeline.</p>
     </div>""", unsafe_allow_html=True)
 
-    if s.event_log:
-        for e in s.event_log:
-            st.markdown(f'<div class="event-box"><h4>Event</h4>{e}</div>', unsafe_allow_html=True)
+    with st.form("round1_form"):
+        c1, c2 = st.columns(2)
 
-    m1,m2,m3,m4,m5,m6 = st.columns(6)
-    m1.metric("Deliverables", f"{round(s.tasks_completed)}", f"/ {s.tasks_required}")
-    m2.metric("Fees Spent",   f"£{round(s.cost_spent):,}",  f"/ £{BUDGET:,}")
-    m3.metric("Morale",       f"{round(s.morale)}/100")
-    m4.metric("Stress",       f"{round(s.stress)}/100")
-    m5.metric("Quality",      f"{round(s.quality)}/100")
-    m6.metric("Rework",       f"{round(s.defects,1)}")
+        with c1:
+            st.markdown("**🎯 Scope Level**")
+            scope = st.radio("What scope will you commit to?",
+                             list(SCOPE_OPTIONS.keys()), index=1, key="r1_scope")
 
-    if len(s.history) >= 2:
-        avg_out = sum(h["net"] for h in s.history[-3:]) / min(3, len(s.history))
-        left = max(0, s.tasks_required - s.tasks_completed)
-        est  = s.week + (left/avg_out if avg_out > 0 else 99)
-        st.caption(f"At current pace: completion by **Week {round(est)}** (target: Week {s.schedule_target})")
+            st.markdown("**⏱️ Schedule Target**")
+            schedule = st.radio("Which delivery schedule will you target?",
+                                list(SCHEDULE_OPTIONS.keys()), index=1, key="r1_sched")
 
-    st.divider()
-    st.markdown("### This Week\'s Decisions")
+            st.markdown("**📦 Procurement Approach**")
+            procure = st.radio("How will you manage procurement?",
+                               list(PROCUREMENT_OPTIONS.keys()), index=0, key="r1_proc")
 
-    frozen = s.hiring_freeze > 0
-    if frozen:
-        st.warning(f"Hiring freeze — {s.hiring_freeze} week(s) remaining. Team size locked.")
-        team = s.team_size
-        s.hiring_freeze = max(0, s.hiring_freeze - 1)
-    else:
-        team = st.slider("Consultants on project", 2, 8, s.team_size)
+        with c2:
+            st.markdown("**👷 Contractor Capacity**")
+            contractor = st.radio("What contractor capacity will you resource?",
+                                  list(CONTRACTOR_OPTIONS.keys()), index=1, key="r1_cont")
 
-    ca,cb = st.columns(2)
-    with ca:
-        skill = st.selectbox("Grade", list(SKILL_MULT.keys()),
-            index=list(SKILL_MULT.keys()).index(s.skill))
-        overtime = st.selectbox("Overtime", ["None","Allowed","Heavy"])
-        pilot    = st.checkbox(f"Run a pilot analysis (+£{PILOT_COST:,} — validates direction early, reduces rework risk)")
-    with cb:
-        outsourcing = st.selectbox("Sub-contract research", ["None","Selective","Full"])
-        meetings    = st.selectbox("Client meetings", ["Light","Balanced","Intensive"])
-        st.selectbox("Risk response", ["Ignore","Monitor","Actively mitigate"])
+            st.markdown("**🌿 Sustainability Standard**")
+            sustain = st.radio("What sustainability standard will you design to?",
+                               list(SUSTAIN_OPTIONS.keys()), index=1, key="r1_sust")
 
-    prev_out = (team * SKILL_MULT[skill] * 6 * (s.morale/100) *
-                max(0.45, 1-s.stress/140) * (s.coordination/100) *
-                (1+OUT_CAP[outsourcing]) * (1+OT_CAP[overtime]) * (1-MTG_PROD[meetings]))
-    est_cost = team * WEEKLY_COST[skill] + OUT_COST[outsourcing] + (PILOT_COST if pilot else 0)
-    budget_left = max(0, BUDGET - s.cost_spent)
-    st.info(f"Est. deliverables this week: **~{round(prev_out)}**  |  Est. fees: **£{est_cost:,}**  |  Budget remaining: **£{round(budget_left):,}**")
+            st.markdown("**🤝 Stakeholder Engagement**")
+            stakeholder = st.radio("How will you engage stakeholders?",
+                                   list(STAKEHOLDER_OPTIONS.keys()), index=1, key="r1_stak")
 
-    st.divider()
-    if st.button(f"Run Week {s.week}", use_container_width=True, type="primary"):
-        res = compute_week(team, skill, outsourcing, overtime, meetings, pilot)
-        s.history.append(res)
-        s.team_size = team; s.skill = skill
-        s.week += 1
-        done   = s.tasks_completed >= s.tasks_required
-        timeup = s.week > s.max_weeks
-        if done or timeup:
-            s.final_score = calc_final_score(); s.phase = "recommendation"
-        st.rerun()
+        submitted = st.form_submit_button("Confirm Round 1 — Enter the Simulation →",
+                                          use_container_width=True)
 
-# ── EVENT: Scope Creep ────────────────────────────────────────────────────────
-elif s.phase == "event":
-    st.markdown("""<div class="main-header">
-    <h1>Client Change Request</h1>
-    <p>Areej is on the phone...</p></div>""", unsafe_allow_html=True)
+    if submitted:
+        # Build initial metrics from combined choices
+        m = {k: 0 for k in st.session_state.metrics}
+        m["stakeholder_conf"] = 60  # base
 
-    st.markdown("""<div class="event-box">
-    <h4>Week 5 — Scope Change Request</h4>
-    <p>Areej has been talking to a contact at a Latin American trade body. She now wants the
-    engagement extended to include <strong>Latin American export markets</strong> and an assessment
-    of <strong>sustainability certification options</strong> (Fairtrade, Rainforest Alliance).</p>
-    <p><em>"I know it wasn\'t in the original brief, but I\'m paying for the best advice and I need
-    to make sure I\'m not missing an opportunity."</em></p>
-    <p>This is classic scope creep. How do you respond?</p></div>""", unsafe_allow_html=True)
+        for table in [
+            SCOPE_OPTIONS[scope],
+            SCHEDULE_OPTIONS[schedule],
+            PROCUREMENT_OPTIONS[procure],
+            CONTRACTOR_OPTIONS[contractor],
+            SUSTAIN_OPTIONS[sustain],
+            STAKEHOLDER_OPTIONS[stakeholder],
+        ]:
+            for k, v in table.items():
+                m[k] = m.get(k, 0) + v
 
-    c1,c2,c3 = st.columns(3)
-    with c1:
-        st.markdown("**Accept in Full**\n- +25 deliverables\n- Morale −5 (team overload)\n- Covers Latin America + certification\n- Serious schedule risk")
-        if st.button("Accept Full Scope", use_container_width=True):
-            apply_event("scope_creep","full"); s.pending_event=None; s.phase="playing"; st.rerun()
-    with c2:
-        st.markdown("**Accept Partially**\n- +12 deliverables\n- Latin America only\n- Manageable impact\n- Areej accepts compromise")
-        if st.button("Accept Partial", use_container_width=True):
-            apply_event("scope_creep","partial"); s.pending_event=None; s.phase="playing"; st.rerun()
-    with c3:
-        st.markdown("**Hold the Brief**\n- No additional deliverables\n- Original scope protected\n- Client relationship risk\n- Professionally justified")
-        if st.button("Hold the Brief", use_container_width=True):
-            apply_event("scope_creep","reject"); s.pending_event=None; s.phase="playing"; st.rerun()
-
-# ── GATE 1: Mid-Point Review (after Week 3) ───────────────────────────────────
-elif s.phase == "gate1":
-    st.markdown("""<div class="main-header">
-    <h1>Phase Gate 1 — Mid-Point Review</h1>
-    <p>End of Phase 1: Import Analysis complete</p></div>""", unsafe_allow_html=True)
-
-    p1q = round(s.phase1_quality_sum / max(1, s.phase1_weeks))
-    colour = "#76b72a" if p1q >= 75 else "#edab00" if p1q >= 60 else "#dc3545"
-    if p1q >= 75:
-        heather_msg = "<p>Areej is impressed: 'The import options analysis is thorough and I can see the financial implications clearly. Good foundation for the export work.'</p>"
-    elif p1q >= 60:
-        heather_msg = "<p>Areej is cautious: 'The import analysis is okay but I wanted more detail on the direct-source pricing. We need to be sharper in Phase 2.'</p>"
-    else:
-        heather_msg = "<p>Areej is concerned: 'I am not confident in this import analysis. The financials are vague. Please make sure the export work is more rigorous — Phase 3 projections depend on getting the cost-per-box right.'</p>"
-    st.markdown(f"""<div class="gate-box">
-    <h4>Areej's Week 3 Check-In</h4>
-    <p>Your Phase 1 average analysis quality: <strong style="color:{colour};">{p1q}/100</strong></p>
-    {heather_msg}
-    <p><small><b>Note:</b> Phase 1 quality below 68/100 applies a 10-point quality penalty in Phase 3 — the export financial projections depend on the import cost assumptions established now.</small></p>
-    </div>""", unsafe_allow_html=True)
-
-    st.info("**Critical path reminder:** Q5 & Q6 (entry mode + financial projections) cannot be finalised until Q1 & Q2 (import costs) are solid. Rushing Phase 1 creates rework in Phase 3.")
-    if st.button("Continue to Phase 2 — Export Research", use_container_width=True, type="primary"):
-        s.gate1_done = True; s.phase = "playing"; st.rerun()
-
-# ── GATE 2: Pre-Synthesis Check (after Week 6) ───────────────────────────────
-elif s.phase == "gate2":
-    st.markdown("""<div class="main-header">
-    <h1>Phase Gate 2 — Pre-Synthesis Check</h1>
-    <p>End of Phase 2: Export research complete</p></div>""", unsafe_allow_html=True)
-
-    p2q = round(s.phase2_quality_sum / max(1, s.phase2_weeks))
-    p1q = round(s.phase1_quality_sum / max(1, s.phase1_weeks))
-    avg_q = (p1q + p2q) / 2
-    if avg_q >= 72:
-        found_msg = "<p style='color:#76b72a;'><b>Strong foundations.</b> Your analysis to date supports confident recommendations.</p>"
-    elif avg_q >= 58:
-        found_msg = "<p style='color:#edab00;'><b>Mixed quality.</b> Be precise in Phase 3 — build on your best work from Phases 1 and 2.</p>"
-    else:
-        found_msg = "<p style='color:#dc3545;'><b>Weak foundations.</b> Phase 3 synthesis will carry forward quality gaps. The 10-point penalty is active.</p>"
-    budget_left = round(BUDGET - s.cost_spent)
-    st.markdown(f"""<div class="gate-box">
-    <h4>Before You Write the Strategy Report</h4>
-    <p>Phase 1 avg quality: <strong>{p1q}/100</strong> &nbsp;|&nbsp; Phase 2 avg quality: <strong>{p2q}/100</strong></p>
-    <p>You are about to enter Phase 3 — synthesising your import and export findings into
-    Areej's strategy report and financial projections. This is where critical path matters most.</p>
-    {found_msg}
-    <p>Budget remaining: <strong>£{budget_left:,}</strong> of £{BUDGET:,}</p>
-    </div>""", unsafe_allow_html=True)
-
-    if st.button("Enter Phase 3 — Strategy Synthesis", use_container_width=True, type="primary"):
-        s.gate2_done = True; s.phase = "playing"; st.rerun()
-
-# ── RECOMMENDATION ────────────────────────────────────────────────────────────
-elif s.phase == "recommendation":
-    sc = s.final_score
-    st.markdown(f"""<div class="main-header">
-    <h1>Present to the Client</h1>
-    <p>Week {s.week-1} — Areej\'s board meeting is tomorrow</p></div>""", unsafe_allow_html=True)
-
-    st.markdown("""<div class="brief-box">
-    <h3>Your Strategic Recommendations</h3>
-    <p>Before you see your PM score, make your four strategic recommendations to Areej.
-    These are the substantive answers her board is waiting for.
-    After you submit, you\'ll see how well they align with what Areej told you in the interview.</p>
-    </div>""", unsafe_allow_html=True)
-
-    answers = {}
-    for key, rec in RECS.items():
-        q_text = rec["q"]
-        st.markdown(f"**{q_text}**")
-        answers[key] = st.radio("", rec["opts"], key=f"rec_{key}", label_visibility="collapsed")
-
-    if st.button("Submit Recommendations to Areej", use_container_width=True, type="primary"):
-        bonus = 0
-        for key, rec in RECS.items():
-            chosen_idx = rec["opts"].index(answers[key])
-            if chosen_idx == rec["best"]: bonus += 25
-            elif abs(chosen_idx - rec["best"]) == 1: bonus += 12
-        s.rec_answers = {k: RECS[k]["opts"].index(v) for k,v in answers.items()}
-        s.rec_score   = bonus
-        s.phase = "complete"; st.rerun()
-
-# ── COMPLETE ──────────────────────────────────────────────────────────────────
-elif s.phase == "complete":
-    sc = s.final_score
-    total_with_bonus = min(1000, sc["total"] + s.rec_score)
-    grade = ("Outstanding" if total_with_bonus>=875 else "Strong" if total_with_bonus>=725
-             else "Adequate" if total_with_bonus>=575 else "Marginal" if total_with_bonus>=425
-             else "Struggling")
-
-    st.markdown(f"""<div class="main-header">
-    <h1>Engagement Complete</h1>
-    <p>Week {s.week-1} &nbsp;·&nbsp; {s.scenario}</p></div>""", unsafe_allow_html=True)
-
-    # PM Score
-    ca,cb = st.columns(2)
-    with ca:
-        st.markdown(f"""<div class="score-box">
-        <div style="font-size:.9rem;opacity:.8;">PM Score</div>
-        <div class="total">{sc["total"]}</div>
-        <div style="font-size:.85rem;opacity:.7;">+ {s.rec_score} pts strategy alignment</div>
-        <div style="font-size:1.5rem;margin-top:.4rem;">= {total_with_bonus} / 1000</div>
-        <div style="font-size:1.2rem;margin-top:.3rem;">{grade}</div>
-        </div>""", unsafe_allow_html=True)
-
-    with cb:
-        df = pd.DataFrame({
-            "Component":["Deliverable Completeness","On-Time Delivery","Budget Control","Analysis Quality","Team & Client Health"],
-            "Score":[sc["scope"],sc["schedule"],sc["cost"],sc["quality"],sc["team"]],
-            "Max":[250,250,200,150,150],
+        m = {k: int(max(0, min(100, v))) for k, v in m.items()}
+        st.session_state.metrics = m
+        st.session_state.history.append(m.copy())
+        st.session_state.decisions_log.append({
+            "round": 1, "title": "Project Initiation",
+            "decision": (
+                f"Scope: {scope.split('(')[0].strip()} | "
+                f"Schedule: {schedule.split('(')[0].split('+')[0].split('−')[0].strip()} | "
+                f"Sustainability: {sustain.split('(')[0].strip()}"
+            ),
         })
-        fig = go.Figure(go.Bar(
-            x=df["Score"], y=df["Component"], orientation="h",
-            marker_color=["#006938","#008996","#edab00","#76b72a","#9b59b6"],
-            text=[f"{s}/{m}" for s,m in zip(df["Score"],df["Max"])],
-            textposition="outside",
-        ))
-        fig.update_layout(height=270, margin=dict(l=10,r=50,t=10,b=10),
-            xaxis=dict(range=[0,270],showgrid=False),
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig, use_container_width=True)
+        st.session_state.round = 2
+        st.session_state.phase = "game"
+        st.rerun()
 
-    # Strategic recommendation reveal
-    st.divider()
-    st.markdown("### Areej\'s Verdict on Your Recommendations")
-    for key, rec in RECS.items():
-        chosen_idx = s.rec_answers.get(key, -1)
-        is_best    = chosen_idx == rec["best"]
-        is_close   = abs(chosen_idx - rec["best"]) == 1
-        box_cls    = "rec-correct" if is_best else "rec-partial" if is_close else "event-box"
-        icon       = "✅" if is_best else "🟡" if is_close else "❌"
-        your_ans   = rec["opts"][chosen_idx] if chosen_idx >= 0 else "—"
-        best_ans   = rec["opts"][rec["best"]]
-        pref_line = "" if is_best else f"<em>Areej's preference:</em> {best_ans}<br>"
-        st.markdown(f"""<div class="{box_cls}">
-        <b>{rec["q"]}</b><br>
-        {icon} <em>Your answer:</em> {your_ans}<br>
-        {pref_line}
-        <small>{rec["why"]}</small>
+
+# ── Rounds 2–8 ───────────────────────────────────────────────────────────────
+def page_game():
+    _sidebar_dashboard()
+
+    rnum = st.session_state.round
+    rdata = next(r for r in ROUNDS if r["num"] == rnum)
+
+    st.markdown(f"""
+    <div class="hdr">
+      <span class="round-pill">Round {rnum} of 8</span>
+      <h2>{rdata['icon']} {rdata['title']}</h2>
+    </div>""", unsafe_allow_html=True)
+
+    _progress_bar(rnum)
+
+    # Midpoint pause
+    if rnum == 5:
+        st.info(
+            "⏸️ **Midpoint Pause** — Your facilitator will now lead a brief dashboard review.  \n"
+            "Are you on track? What is your biggest risk? Has your strategy changed?"
+        )
+
+    col_main, col_right = st.columns([3, 2])
+
+    with col_main:
+        st.markdown(f'<div class="card">{rdata["event"]}</div>', unsafe_allow_html=True)
+        st.markdown("#### What does your team decide?")
+
+        choice_label = st.radio(
+            "Select your decision:",
+            [o["label"] for o in rdata["options"]],
+            key=f"r{rnum}_choice",
+        )
+        chosen = next(o for o in rdata["options"] if o["label"] == choice_label)
+
+        st.markdown(f'<div class="opt-hint">{chosen["description"]}</div>',
+                    unsafe_allow_html=True)
+
+        next_label = (
+            f"Confirm & Proceed to Round {rnum + 1} →" if rnum < 8
+            else "Confirm & See Final Results →"
+        )
+        if st.button(next_label, use_container_width=True):
+            _apply(chosen["impact"])
+            st.session_state.decisions_log.append({
+                "round": rnum,
+                "title": rdata["title"],
+                "decision": choice_label,
+            })
+            if rnum < 8:
+                st.session_state.round = rnum + 1
+            else:
+                st.session_state.phase = "results"
+            st.rerun()
+
+    with col_right:
+        st.markdown("#### Current Performance")
+        st.plotly_chart(_radar_chart(), use_container_width=True)
+
+        done = rnum - 1
+        pct  = done / 8 * 100
+        st.markdown(f"""
+        <div style="background:white;border-radius:8px;padding:12px;margin-top:6px;">
+          <div style="font-size:.78rem;color:#666;margin-bottom:5px;">Progress</div>
+          <div style="background:#E8F5EE;border-radius:4px;height:8px;">
+            <div style="background:{STIR_GREEN};width:{pct:.0f}%;height:8px;border-radius:4px;"></div>
+          </div>
+          <div style="font-size:.78rem;color:{STIR_GREEN};margin-top:4px;text-align:right;">
+            {done} / 8 rounds complete
+          </div>
         </div>""", unsafe_allow_html=True)
 
-    # Charts
-    st.divider()
-    st.markdown("### Engagement History")
-    if s.history:
-        hdf = pd.DataFrame(s.history)
-        t1,t2,t3 = st.tabs(["Output & Rework","People Metrics","Fee Burn"])
-        with t1:
-            f1 = go.Figure()
-            f1.add_trace(go.Bar(x=hdf["week"],y=hdf["net"],name="Net Deliverables",marker_color="#006938"))
-            f1.add_trace(go.Bar(x=hdf["week"],y=hdf["rework"],name="Rework",marker_color="#dc3545"))
-            f1.update_layout(barmode="stack",height=280,xaxis_title="Week",
-                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(f1, use_container_width=True)
-        with t2:
-            f2 = go.Figure()
-            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["morale"],name="Morale",line=dict(color="#76b72a",width=2)))
-            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["stress"],name="Stress",line=dict(color="#dc3545",width=2)))
-            f2.add_trace(go.Scatter(x=hdf["week"],y=hdf["quality"],name="Quality",line=dict(color="#edab00",width=2,dash="dot")))
-            f2.update_layout(height=280,xaxis_title="Week",
-                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(f2, use_container_width=True)
-        with t3:
-            cumcost = hdf["cost"].cumsum()
-            f3 = go.Figure()
-            f3.add_trace(go.Scatter(x=hdf["week"],y=cumcost,fill="tozeroy",name="Cumulative Fees",line=dict(color="#006938")))
-            f3.add_hline(y=BUDGET,line_dash="dash",line_color="red",annotation_text=f"Budget £{BUDGET:,}")
-            f3.update_layout(height=280,xaxis_title="Week",
-                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(f3, use_container_width=True)
+        # Key risk warnings
+        m = st.session_state.metrics
+        warnings = []
+        if m["risk_exposure"] > 60:
+            warnings.append("🔴 Risk exposure is high")
+        if m["schedule_pressure"] > 65:
+            warnings.append("🔴 Schedule pressure critical")
+        if m["cost_spent"] > 85:
+            warnings.append("🔴 Budget nearly exhausted")
+        if m["stakeholder_conf"] < 35:
+            warnings.append("🟡 Stakeholder confidence low")
+        if m["tech_quality"] < 40:
+            warnings.append("🟡 Technical quality at risk")
+        if warnings:
+            st.markdown("**⚠️ Watch Points**")
+            for w in warnings:
+                st.markdown(f"<small>{w}</small>", unsafe_allow_html=True)
 
-    if s.event_log:
-        st.markdown("### Events That Hit Your Engagement")
-        for e in s.event_log:
-            st.markdown(f'<div class="event-box">{e}</div>', unsafe_allow_html=True)
 
-    if s.history:
-        st.markdown("### Decision Log")
-        disp = pd.DataFrame(s.history).rename(columns={
-            "week":"Week","team":"Team","skill":"Grade","outsourcing":"Sub-contract",
-            "overtime":"OT","meetings":"Meetings","pilot":"Pilot",
-            "net":"Net","rework":"Rework","quality":"Quality","morale":"Morale","stress":"Stress","cost":"Fees"})
-        st.dataframe(disp[["Week","Team","Grade","Sub-contract","OT","Meetings","Pilot","Net","Rework","Quality","Morale","Stress","Fees"]],
-            use_container_width=True, hide_index=True)
+# ── Results ───────────────────────────────────────────────────────────────────
+def page_results():
+    _sidebar_dashboard()
 
-    st.divider()
-    st.markdown("### Reflection Prompts")
-    for p in [
-        "Brooks\'s Law: did adding or losing people help or hurt? When did coordination costs outweigh capacity gains?",
-        "The overtime paradox: did authorising overtime produce more net deliverables or just more rework?",
-        "Critical path: did the quality of your Phase 1 (import analysis) affect your Phase 3 (synthesis)? How?",
-        "Scope management: when Areej asked for more, what criteria should determine the answer in real consultancy?",
-        "Pilot analysis: did early validation reduce your rework? When is it worth the cost and when is it not?",
-        "Budget: with only £32,000 available, what was your biggest trade-off between team size, grade, and time?",
-        "What would you recommend differently to Areej now compared to Week 1? What changed your view?",
-        "How would you present these findings differently if Areej were risk-averse vs. growth-hungry?",
+    score = _final_score()
+    g_label, g_icon, g_col = _grade(score)
+    m = st.session_state.metrics
+
+    st.markdown(f"""
+    <div class="score-final">
+      <div style="font-size:.9rem;opacity:.75;">AquaHub Delivery Challenge — Final Results</div>
+      <div style="font-size:1.3rem;font-weight:600;margin-top:6px;">
+        {st.session_state.team_name}
+      </div>
+      <div style="font-size:4.5rem;font-weight:700;line-height:1.1;">{score}</div>
+      <div style="font-size:.95rem;opacity:.75;">out of 1 000 points</div>
+      <div style="font-size:1.4rem;margin-top:10px;">{g_icon} {g_label}</div>
+    </div>""", unsafe_allow_html=True)
+
+    # ── Score breakdown ──
+    st.markdown("### Score Breakdown")
+    components = [
+        ("🎯 Scope Delivered",       (m["scope_pct"] / 100) * 200,                         200),
+        ("⏱️ Schedule Performance",  max(0, (100 - m["schedule_pressure"]) / 100) * 200,    200),
+        ("💰 Cost Control",          max(0, 100 - max(0, m["cost_spent"] - 80)) / 100 * 180, 180),
+        ("🔧 Technical Quality",     (m["tech_quality"] / 100) * 160,                       160),
+        ("🌿 Sustainability",        (m["sustainability"] / 100) * 130,                      130),
+        ("🤝 Stakeholder Confidence",(m["stakeholder_conf"] / 100) * 80,                     80),
+        ("⚠️ Risk Management",       max(0, (100 - m["risk_exposure"]) / 100) * 50,          50),
+    ]
+
+    col_a, col_b = st.columns(2)
+    for i, (label, pts, max_pts) in enumerate(components):
+        pct = pts / max_pts * 100
+        col = "#C62828" if pct < 40 else "#F57F17" if pct < 70 else "#00573F"
+        bar_html = f"""
+        <div class="breakdown-row">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:.9rem;">
+            <span>{label}</span>
+            <span style="font-weight:700;color:{col};">{pts:.0f} / {max_pts}</span>
+          </div>
+          <div style="background:#E8F5EE;border-radius:4px;height:7px;">
+            <div style="background:{col};width:{pct:.0f}%;height:7px;border-radius:4px;"></div>
+          </div>
+        </div>"""
+        (col_a if i % 2 == 0 else col_b).markdown(bar_html, unsafe_allow_html=True)
+
+    # Rework penalty
+    penalty = m["rework"] / 100 * 40
+    if penalty > 0:
+        col_b.markdown(f"""
+        <div style="background:#FFF3E0;border-radius:8px;padding:10px 14px;margin:4px 0;
+                    border-left:4px solid #F57F17;font-size:.88rem;">
+          🔄 Rework Penalty &nbsp;
+          <span style="float:right;font-weight:700;color:#C62828;">−{penalty:.0f} pts</span>
+        </div>""", unsafe_allow_html=True)
+
+    # ── Radar ──
+    st.markdown("### Project Performance Profile")
+    col_chart, col_final = st.columns([2, 1])
+    with col_chart:
+        st.plotly_chart(_radar_chart(), use_container_width=True)
+    with col_final:
+        st.markdown("#### Final Metrics")
+        for label, key, lower_is_better, unit in [
+            ("Scope Delivered",    "scope_pct",         False, "%"),
+            ("Schedule Pressure",  "schedule_pressure",  True, "%"),
+            ("Cost Spent",         "cost_spent",         True, "% budget"),
+            ("Technical Quality",  "tech_quality",      False, "/100"),
+            ("Sustainability",     "sustainability",     False, "/100"),
+            ("Stakeholder Conf.",  "stakeholder_conf",  False, "/100"),
+            ("Risk Exposure",      "risk_exposure",      True, "/100"),
+            ("Rework",             "rework",             True, "/100"),
+        ]:
+            val = m[key]
+            col = ("#C62828" if (val > 60 if lower_is_better else val < 40)
+                   else "#F57F17" if (val > 30 if lower_is_better else val < 65)
+                   else "#00573F")
+            st.markdown(f"""
+            <div style="background:white;border-radius:7px;padding:7px 11px;margin:3px 0;
+                        border-left:4px solid {col};font-size:.82rem;">
+              <span style="color:#555;">{label}</span><br>
+              <span style="font-weight:700;color:{col};">{val:.0f}{unit}</span>
+            </div>""", unsafe_allow_html=True)
+
+    # ── Decision log ──
+    st.markdown("### Your Decision Record")
+    for d in st.session_state.decisions_log:
+        st.markdown(f"""
+        <div class="decision-log-item">
+          <strong>Round {d['round']}: {d['title']}</strong><br>
+          <span style="color:#444;">{d['decision']}</span>
+        </div>""", unsafe_allow_html=True)
+
+    # ── Debrief prompts ──
+    st.markdown("### 💬 Debrief Discussion Points")
+    for q in [
+        "Did your Round 1 strategy hold throughout, or did you adapt it? Why?",
+        "Which single decision had the biggest impact on your final score?",
+        "Did the fastest schedule produce the best overall outcome?",
+        "How did your sustainability choices affect other metrics?",
+        "Which role's concerns were most important in hindsight?",
+        "What would you do differently if you played again?",
+        "How would you present this outcome to senior leadership?",
     ]:
-        st.markdown(f'<div class="reflection-box">💬 {p}</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background:{STIR_PALE};border-radius:7px;padding:8px 13px;margin:4px 0;
+                    font-size:.88rem;border-left:3px solid {STIR_LT};">
+          {q}
+        </div>""", unsafe_allow_html=True)
 
-    st.divider()
-    ca,cb = st.columns(2)
-    with ca:
-        if st.button("Run Another Engagement", use_container_width=True, type="primary"):
-            for k in list(st.session_state.keys()): del st.session_state[k]
-            st.rerun()
-    with cb:
-        if st.button("Try a Different Scenario", use_container_width=True):
-            for k in list(st.session_state.keys()): del st.session_state[k]
-            st.rerun()
+    st.markdown("---")
+    if st.button("🔄 Play Again (Reset Simulation)", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
 
 
-# ── Footer ───────────────────────────────────────────────────────────────────────────────
-st.markdown(
-    "<div style='text-align:center;padding:2rem 0 1rem;'>"
-    "<p style='color:#006938;font-size:0.85rem;font-family:DM Sans,Calibri,sans-serif;'>"
-    "<strong style='color:#005734;'>The Areej Tea Company Brief</strong>"
-    " &middot; MSc Project Management Simulation"
-    " &middot; Designed by <strong>Areej Riaz</strong> &middot; University of Stirling"
-    "</p></div>",
-    unsafe_allow_html=True
-)
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUTER
+# ══════════════════════════════════════════════════════════════════════════════
+
+def main():
+    _init()
+    phase = st.session_state.phase
+
+    if   phase == "welcome": page_welcome()
+    elif phase == "round1":  page_round1()
+    elif phase == "game":    page_game()
+    elif phase == "results": page_results()
+
+
+if __name__ == "__main__":
+    main()
