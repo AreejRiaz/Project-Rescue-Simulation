@@ -552,8 +552,8 @@ def page_welcome():
     <div class="hdr">
       <h1>🌊 AquaHub Delivery Challenge</h1>
       <p>Project Management Simulation &nbsp;·&nbsp; MSc Project Management Programme</p>
-      <p style="font-size:.82rem;opacity:.65;">University of Stirling</p>
-      <p style="font-size:.78rem;opacity:.55;margin-top:6px;">Created by Areej Riaz · University of Stirling</p>
+      <p style="font-size:.82rem;opacity:.7;">Created by Areej Riaz</p>
+      <p style="font-size:.78rem;opacity:.55;">University of Stirling</p>
     </div>""", unsafe_allow_html=True)
 
     col_l, col_r = st.columns([3, 2])
@@ -936,12 +936,6 @@ def main():
     if   phase == "welcome": page_welcome()
     elif phase == "game":    page_game()
     elif phase == "results": page_results()
-    st.markdown(
-        "<div style='text-align:center;font-size:.78rem;color:#888;padding:8px 0 16px;'>"
-        "Created by <strong>Areej Riaz</strong> &nbsp;·&nbsp; University of Stirling &nbsp;·&nbsp; "
-        "MSc Project Management Programme</div>",
-        unsafe_allow_html=True,
-    )
 
 
 if __name__ == "__main__":
