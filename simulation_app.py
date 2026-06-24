@@ -648,46 +648,41 @@ def page_round1():
     <p>The AquaHub facility has been formally approved. Your team must now make the foundational
     decisions that will govern how the project is managed from this point forward.</p>
     <p>The <strong>Project Manager</strong> leads this session. Each role should contribute before the
-    team agrees a collective position. Remember: high ambition requires strong resources — and a
-    realistic timeline.</p>
+    team agrees a collective position. High ambition requires strong resources — and a realistic timeline.</p>
     </div>""", unsafe_allow_html=True)
 
-    with st.form("round1_form"):
-        c1, c2 = st.columns(2)
+    c1, c2 = st.columns(2)
 
-        with c1:
-            st.markdown("**🎯 Scope Level**")
-            scope = st.radio("What scope will you commit to?",
-                             list(SCOPE_OPTIONS.keys()), index=1, key="r1_scope")
+    with c1:
+        st.markdown("**🎯 Scope Level**")
+        scope = st.radio("What scope will you commit to?",
+                         list(SCOPE_OPTIONS.keys()), index=1, key="r1_scope")
 
-            st.markdown("**⏱️ Schedule Target**")
-            schedule = st.radio("Which delivery schedule will you target?",
-                                list(SCHEDULE_OPTIONS.keys()), index=1, key="r1_sched")
+        st.markdown("**⏱️ Schedule Target**")
+        schedule = st.radio("Which delivery schedule will you target?",
+                            list(SCHEDULE_OPTIONS.keys()), index=1, key="r1_sched")
 
-            st.markdown("**📦 Procurement Approach**")
-            procure = st.radio("How will you manage procurement?",
-                               list(PROCUREMENT_OPTIONS.keys()), index=0, key="r1_proc")
+        st.markdown("**📦 Procurement Approach**")
+        procure = st.radio("How will you manage procurement?",
+                           list(PROCUREMENT_OPTIONS.keys()), index=0, key="r1_proc")
 
-        with c2:
-            st.markdown("**👷 Contractor Capacity**")
-            contractor = st.radio("What contractor capacity will you resource?",
-                                  list(CONTRACTOR_OPTIONS.keys()), index=1, key="r1_cont")
+    with c2:
+        st.markdown("**👷 Contractor Capacity**")
+        contractor = st.radio("What contractor capacity will you resource?",
+                              list(CONTRACTOR_OPTIONS.keys()), index=1, key="r1_cont")
 
-            st.markdown("**🌿 Sustainability Standard**")
-            sustain = st.radio("What sustainability standard will you design to?",
-                               list(SUSTAIN_OPTIONS.keys()), index=1, key="r1_sust")
+        st.markdown("**🌿 Sustainability Standard**")
+        sustain = st.radio("What sustainability standard will you design to?",
+                           list(SUSTAIN_OPTIONS.keys()), index=1, key="r1_sust")
 
-            st.markdown("**🤝 Stakeholder Engagement**")
-            stakeholder = st.radio("How will you engage stakeholders?",
-                                   list(STAKEHOLDER_OPTIONS.keys()), index=1, key="r1_stak")
+        st.markdown("**🤝 Stakeholder Engagement**")
+        stakeholder = st.radio("How will you engage stakeholders?",
+                               list(STAKEHOLDER_OPTIONS.keys()), index=1, key="r1_stak")
 
-        submitted = st.form_submit_button("Confirm Round 1 — Enter the Simulation →",
-                                          use_container_width=True)
-
-    if submitted:
-        # Build initial metrics from combined choices
+    st.markdown("---")
+    if st.button("Confirm Round 1 Decisions — Enter the Simulation →"):
         m = {k: 0 for k in st.session_state.metrics}
-        m["stakeholder_conf"] = 60  # base
+        m["stakeholder_conf"] = 60
 
         for table in [
             SCOPE_OPTIONS[scope],
@@ -707,7 +702,7 @@ def page_round1():
             "round": 1, "title": "Project Initiation",
             "decision": (
                 f"Scope: {scope.split('(')[0].strip()} | "
-                f"Schedule: {schedule.split('(')[0].split('+')[0].split('−')[0].strip()} | "
+                f"Schedule: {schedule.split('(')[0].strip()} | "
                 f"Sustainability: {sustain.split('(')[0].strip()}"
             ),
         })
