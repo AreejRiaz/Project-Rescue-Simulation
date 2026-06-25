@@ -414,6 +414,14 @@ def _init():
             st.session_state[k] = v
 
 
+def _rerun():
+    """Rerun Streamlit, with compatibility for older deployments."""
+    if hasattr(st, "rerun"):
+        st.rerun()
+    else:
+        st.experimental_rerun()
+
+
 def _apply(impact: dict):
     m = st.session_state.metrics
     for key, delta in impact.items():
@@ -590,7 +598,7 @@ stakeholder trust and risk. There is no single perfect answer.
             if tname.strip():
                 st.session_state.team_name = tname.strip()
                 st.session_state.phase = "round1"
-                st.rerun()
+                _rerun()
             else:
                 st.error("Please enter a team name.")
 
@@ -708,7 +716,7 @@ def page_round1():
         })
         st.session_state.round = 2
         st.session_state.phase = "game"
-        st.rerun()
+        _rerun()
 
 
 # ── Rounds 2–8 ───────────────────────────────────────────────────────────────
@@ -716,7 +724,10 @@ def page_game():
     _sidebar_dashboard()
 
     rnum = st.session_state.round
-    rdata = next(r for r in ROUNDS if r["num"] == rnum)
+    rdata = next((r for r in ROUNDS if r["num"] == rnum), None)
+    if rdata is None:
+        st.session_state.phase = "results" if rnum > 8 else "round1"
+        _rerun()
 
     st.markdown(f"""
     <div class="hdr">
@@ -764,7 +775,7 @@ def page_game():
                 st.session_state.round = rnum + 1
             else:
                 st.session_state.phase = "results"
-            st.rerun()
+            _rerun()
 
     with col_right:
         st.markdown("#### Current Performance")
@@ -917,7 +928,7 @@ def page_results():
     if st.button("🔄 Play Again (Reset Simulation)", use_container_width=True):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
-        st.rerun()
+        _rerun()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -928,9 +939,17 @@ def main():
     _init()
     phase = st.session_state.phase
 
-    if   phase == "welcome": page_welcome()
-    elif phase == "game":    page_game()
-    elif phase == "results": page_results()
+    if phase == "welcome":
+        page_welcome()
+    elif phase == "round1":
+        page_round1()
+    elif phase == "game":
+        page_game()
+    elif phase == "results":
+        page_results()
+    else:
+        st.session_state.phase = "welcome"
+        _rerun()
 
 
 if __name__ == "__main__":
